@@ -10,41 +10,42 @@
   html,body { margin:0; height:100%; background:#05060a; overflow:hidden;
     font-family: ui-monospace, "SF Mono", Menlo, monospace; color:var(--fg); }
   #stage { position:fixed; inset:0; display:block; }
-  #panel { position:fixed; top:10px; left:10px; z-index:10; width:190px;
-    background:rgba(14,17,26,.62); backdrop-filter:blur(14px) saturate(1.2);
-    border:1px solid rgba(255,255,255,.09); border-radius:10px; padding:10px 10px 8px;
-    box-shadow:0 12px 40px rgba(0,0,0,.5); user-select:none; transition:transform .25s ease, opacity .25s; }
-  #panel.hidden { transform:translateX(-220px); opacity:0; }
-  #panel h1 { font-size:11px; letter-spacing:.14em; margin:0 0 1px; font-weight:600; }
-  #panel .sub { font-size:9px; color:var(--dim); margin:0 0 6px; letter-spacing:.06em; }
-  .row { margin:5px 0; }
+  #panel { position:fixed; bottom:0; left:0; right:0; z-index:10;
+    background:rgba(10,12,18,.78); backdrop-filter:blur(18px) saturate(1.3);
+    border-top:1px solid rgba(255,255,255,.07);
+    padding:6px 14px; user-select:none;
+    transition:transform .3s ease, opacity .3s; display:flex; align-items:center; gap:10px; }
+  #panel.hidden { transform:translateY(100%); opacity:0; }
+  #panel h1 { font-size:9px; letter-spacing:.16em; margin:0; font-weight:700; white-space:nowrap; color:var(--acc); }
+  #panel .sub { display:none; }
+  .sliders { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+  .row { margin:0; display:flex; align-items:center; gap:5px; white-space:nowrap; }
   .row.mos { display:none; }
-  .row label { display:flex; justify-content:space-between; font-size:9.5px; color:var(--dim);
-    letter-spacing:.04em; margin-bottom:3px; text-transform:uppercase; }
-  .row label b { color:var(--fg); font-weight:600; }
-  input[type=range]{ -webkit-appearance:none; width:100%; height:2px; border-radius:2px;
-    background:rgba(255,255,255,.16); outline:none; }
-  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:10px; height:10px; border-radius:50%;
-    background:var(--acc); cursor:pointer; box-shadow:0 0 8px rgba(124,199,255,.7); }
-  input[type=range]::-moz-range-thumb{ width:10px; height:10px; border:0; border-radius:50%;
-    background:var(--acc); cursor:pointer; box-shadow:0 0 8px rgba(124,199,255,.7); }
-  .btns { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
-  button { flex:1 1 auto; font:inherit; font-size:9.5px; letter-spacing:.04em; color:var(--fg);
-    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:7px;
-    padding:5px 5px; cursor:pointer; transition:background .15s, border-color .15s; }
+  .row label { display:flex; align-items:center; gap:4px; font-size:8px; color:var(--dim);
+    letter-spacing:.03em; margin:0; text-transform:uppercase; white-space:nowrap; }
+  .row label b { color:var(--fg); font-weight:600; min-width:22px; text-align:right; }
+  input[type=range]{ -webkit-appearance:none; width:70px; height:2px; border-radius:2px;
+    background:rgba(255,255,255,.18); outline:none; flex-shrink:1; min-width:40px; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:8px; height:8px; border-radius:50%;
+    background:var(--acc); cursor:pointer; box-shadow:0 0 6px rgba(124,199,255,.6); }
+  input[type=range]::-moz-range-thumb{ width:8px; height:8px; border:0; border-radius:50%;
+    background:var(--acc); cursor:pointer; box-shadow:0 0 6px rgba(124,199,255,.6); }
+  .btns { display:flex; gap:3px; margin:0; }
+  button { flex:0 0 auto; font:inherit; font-size:8px; letter-spacing:.03em; color:var(--fg);
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius:4px;
+    padding:3px 7px; cursor:pointer; transition:background .15s, border-color .15s; white-space:nowrap; }
   button:hover{ background:rgba(124,199,255,.16); border-color:rgba(124,199,255,.45); }
   button.on{ background:rgba(124,199,255,.22); border-color:rgba(124,199,255,.6); color:#dff0ff; }
-  #hint { position:fixed; bottom:12px; left:0; right:0; text-align:center; font-size:10.5px;
-    color:rgba(255,255,255,.32); letter-spacing:.08em; z-index:5; pointer-events:none; }
-  #stat { position:fixed; top:10px; right:12px; z-index:10; text-align:right; font-size:9.5px;
-    color:var(--dim); letter-spacing:.06em; line-height:1.5; }
+  #hint { display:none; }
+  #stat { position:fixed; top:8px; right:10px; z-index:10; text-align:right; font-size:8px;
+    color:var(--dim); letter-spacing:.05em; line-height:1.4; opacity:.45; }
   #stat b{ color:var(--fg); }
   #loadbar { position:fixed; left:0; top:0; height:2px; background:linear-gradient(90deg,#7cc7ff,#b388ff);
     width:0%; z-index:20; transition:width .2s ease; box-shadow:0 0 10px rgba(124,199,255,.8); }
-  #toggleBtn { position:fixed; top:10px; left:10px; z-index:11; display:none; width:28px;height:28px;
-    border-radius:8px; background:rgba(14,17,26,.62); border:1px solid rgba(255,255,255,.12);
-    color:var(--fg); cursor:pointer; font-size:13px; }
-  #focusName { position:fixed; left:50%; bottom:42px; transform:translateX(-50%); z-index:6;
+  #toggleBtn { position:fixed; bottom:6px; left:50%; transform:translateX(-50%); z-index:11; display:none; width:32px;height:18px;
+    border-radius:9px 9px 0 0; background:rgba(10,12,18,.78); border:1px solid rgba(255,255,255,.10); border-bottom:0;
+    color:var(--dim); cursor:pointer; font-size:10px; line-height:16px; text-align:center; }
+  #focusName { position:fixed; left:50%; bottom:52px; transform:translateX(-50%); z-index:6;
     font-size:12px; letter-spacing:.12em; color:#dff0ff; opacity:0; transition:opacity .3s;
     text-shadow:0 0 18px rgba(124,199,255,.6); }
   #boot { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:8;
@@ -75,28 +76,27 @@
 <canvas id="stage"></canvas>
 <button id="toggleBtn" title="Show controls">⚙</button>
 <div id="panel">
-  <h1>AH!RCHIVES</h1>
-  <p class="sub">999 · webgl</p>
-  <div class="btns" style="margin-top:0">
+  <h1>AH!</h1>
+  <div class="btns">
     <button id="mUni" class="on">✦ universe</button>
     <button id="mMos">▦ mosaic</button>
   </div>
-  <div class="row uni"><label>Heads <b id="vCount">—</b></label><input id="count" type="range" min="40" max="999" value="999"></div>
-  <div class="row uni"><label>Vert sway <b id="vSwirl">0.00</b></label><input id="swirl" type="range" min="0" max="150" value="0"></div>
-  <div class="row uni"><label>Depth pulse <b id="vDepth">0.50</b></label><input id="depth" type="range" min="0" max="150" value="50"></div>
-  <div class="row uni"><label>Speed <b id="vDrift">0.35</b></label><input id="drift" type="range" min="0" max="150" value="35"></div>
-  <div class="row uni"><label>Head size <b id="vSize">1.00</b></label><input id="size" type="range" min="40" max="200" value="100"></div>
-  <div class="row mos"><label>Switch speed <b id="vMspeed">0.50</b></label><input id="mspeed" type="range" min="0" max="150" value="50"></div>
-  <div class="row mos"><label>Active % <b id="vActive">60</b></label><input id="active" type="range" min="0" max="100" value="60"></div>
-  <div class="row mos"><label>Cell size <b id="vCell">90</b></label><input id="cell" type="range" min="44" max="180" value="90"></div>
-  <div class="btns">
-    <button id="bShape">◻ rounded</button>
-    <button id="bPause">⏸ pause</button>
+  <div class="sliders">
+    <div class="row uni"><label>Heads <b id="vCount">—</b></label><input id="count" type="range" min="40" max="999" value="999"></div>
+    <div class="row uni"><label>Sway <b id="vSwirl">0.00</b></label><input id="swirl" type="range" min="0" max="150" value="0"></div>
+    <div class="row uni"><label>Depth <b id="vDepth">0.50</b></label><input id="depth" type="range" min="0" max="150" value="50"></div>
+    <div class="row uni"><label>Speed <b id="vDrift">0.35</b></label><input id="drift" type="range" min="0" max="150" value="35"></div>
+    <div class="row uni"><label>Size <b id="vSize">1.00</b></label><input id="size" type="range" min="40" max="200" value="100"></div>
+    <div class="row mos"><label>Speed <b id="vMspeed">0.50</b></label><input id="mspeed" type="range" min="0" max="150" value="50"></div>
+    <div class="row mos"><label>Active <b id="vActive">60</b></label><input id="active" type="range" min="0" max="100" value="60"></div>
+    <div class="row mos"><label>Cell <b id="vCell">90</b></label><input id="cell" type="range" min="44" max="180" value="90"></div>
   </div>
   <div class="btns">
-    <button id="bShuffle">⤮ shuffle</button>
-    <button id="bGlow" class="on">✦ glow</button>
-    <button id="bFlip">⤢ both</button>
+    <button id="bShape">◻</button>
+    <button id="bPause">⏸</button>
+    <button id="bShuffle">⤮</button>
+    <button id="bGlow" class="on">✦</button>
+    <button id="bFlip">⤢</button>
   </div>
 </div>
 <div id="stat"><div>loaded <b id="sLoaded">0</b>/<span id="sTotal">999</span></div><div><b id="sFps">0</b> fps</div></div>
@@ -340,15 +340,15 @@
         bFlip=document.getElementById('bFlip'),
         mUni=document.getElementById('mUni'), mMos=document.getElementById('mMos'),
         hint=document.getElementById('hint');
-  const flipLabel={h:'⇆ horizontal', v:'⇅ vertical', both:'⤢ both', null:'⊘ no flip'};
+  const flipLabel={h:'⇆', v:'⇅', both:'⤢', null:'⊘'};
   const flipOrder=['both','h','v','null'];
   function setFlip(m){ P.flip=m; bFlip.textContent=flipLabel[m]; }
   bFlip.onclick=()=>{ setFlip(flipOrder[(flipOrder.indexOf(P.flip)+1)%flipOrder.length]); };
-  const shapeLabel={round:'◻ rounded',circle:'● circle',square:'▦ square'};
+  const shapeLabel={round:'◻',circle:'●',square:'▦'};
   function rebuildAtlas(){ if(!ready) return; for(let k=0;k<sprites.length;k++) drawTile(sprites[k].img,k,P.shape); uploadAtlas(); }
   function setShape(sh){ P.shape=sh; bShape.textContent=shapeLabel[sh]; rebuildAtlas(); }
   bShape.onclick=()=>{ setShape(P.shape==='round'?'circle':P.shape==='circle'?'square':'round'); };
-  bPause.onclick=()=>{ P.paused=!P.paused; bPause.classList.toggle('on',P.paused); bPause.textContent=P.paused?'▶ play':'⏸ pause'; };
+  bPause.onclick=()=>{ P.paused=!P.paused; bPause.classList.toggle('on',P.paused); bPause.textContent=P.paused?'▶':'⏸'; };
   bShuffle.onclick=()=>{
     if(P.mode==='mosaic'){ for(const c of cells){ c.flipping=true; c.flip=0; c.swapped=false; c.axis=Math.random()<0.5?0:1; } }
     else { for(const s of sprites){ s.r=Math.sqrt(Math.random()); s.a=rnd(0,Math.PI*2); s.zPh=rnd(0,Math.PI*2); s.base=rnd(0.55,1.35);} shuffle(order); }
@@ -356,10 +356,10 @@
   bGlow.onclick=()=>{ P.glow=!P.glow; bGlow.classList.toggle('on',P.glow); };
   function applyMode(){
     const uni=P.mode==='universe';
-    document.querySelectorAll('.row.uni').forEach(e=>e.style.display=uni?'block':'none');
-    document.querySelectorAll('.row.mos').forEach(e=>e.style.display=uni?'none':'block');
+    document.querySelectorAll('.row.uni').forEach(e=>e.style.display=uni?'flex':'none');
+    document.querySelectorAll('.row.mos').forEach(e=>e.style.display=uni?'none':'flex');
     mUni.classList.toggle('on',uni); mMos.classList.toggle('on',!uni);
-    bGlow.style.display=uni?'':'none'; bFlip.style.display=uni?'none':''; bShuffle.textContent=uni?'⤮ shuffle':'⤮ reshuffle';
+    bGlow.style.display=uni?'':'none'; bFlip.style.display=uni?'none':''; bShuffle.textContent='⤮';
     hint.textContent = uni ? 'click a head → its card + buy link · drag a slider · ⚙ hides panel'
                            : 'click a tile → its card + buy link · Switch speed = pace · ⚙ hides panel';
   }
