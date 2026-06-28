@@ -36,6 +36,10 @@
     padding:3px 7px; cursor:pointer; transition:background .15s, border-color .15s; white-space:nowrap; }
   button:hover{ background:rgba(124,199,255,.16); border-color:rgba(124,199,255,.45); }
   button.on{ background:rgba(124,199,255,.22); border-color:rgba(124,199,255,.6); color:#dff0ff; }
+  .sep{ width:1px; align-self:stretch; margin:2px 2px; background:rgba(255,255,255,.10); flex:0 0 auto; }
+  .tiers button{ min-width:26px; font-weight:600; }
+  .tiers button.on{ background:rgba(255,196,124,.24); border-color:rgba(255,196,124,.65); color:#ffe6c4;
+    box-shadow:0 0 8px rgba(255,196,124,.25); }
   #hint { display:none; }
   #stat { position:fixed; top:8px; right:10px; z-index:10; text-align:right; font-size:8px;
     color:var(--dim); letter-spacing:.05em; line-height:1.4; opacity:.45; }
@@ -98,6 +102,13 @@
     <button id="bGlow" class="on">✦</button>
     <button id="bFlip">⤢</button>
   </div>
+  <div class="sep"></div>
+  <div class="btns tiers">
+    <button id="tA" class="on">all</button>
+    <button id="t1" title="900 items">T1</button>
+    <button id="t2" title="77 items">T2</button>
+    <button id="t3" title="22 items">T3</button>
+  </div>
 </div>
 <div id="stat"><div>loaded <b id="sLoaded">0</b>/<span id="sTotal">999</span></div><div><b id="sFps">0</b> fps</div></div>
 <div id="focusName"></div>
@@ -132,7 +143,7 @@
 
   // ---- params from UI ----
   const P = { count:IDS.length, swirl:0.30, depth:0.50, drift:0.35, size:1.0, shape:'square', paused:true, glow:true,
-              mode:'mosaic', mspeed:0.50, cell:90, activePct:60, flip:'both' };
+              mode:'mosaic', mspeed:0.50, cell:90, activePct:60, flip:'both', tiers:new Set() };
   const bind = (id, key, f) => {
     const el=document.getElementById(id), out=document.getElementById('v'+id[0].toUpperCase()+id.slice(1));
     const upd=()=>{ const v=+el.value; P[key]= f? f(v): v; if(out) out.textContent=(typeof P[key]==='number'?(Number.isInteger(P[key])?P[key]:P[key].toFixed(2)):P[key]); };
@@ -212,6 +223,15 @@
   // ---- sprites (atlas tiles) ----
   const rnd=(a,b)=>a+Math.random()*(b-a);
   const sprites=[]; let order=[]; let loaded=0; let ready=false;
+  // ---- tier filter ----
+  const META = window.THUMB_META||{};
+  function tierOf(id){ const m=META[id]; if(!m||!m.t) return null; const t=m.t.find(x=>x[0]==='Tier'); return t?t[1]:null; }
+  let pool=[];   // sprite indices passing the active tier filter (empty filter = all)
+  function rebuildPool(){
+    pool = sprites.map((_,i)=>i).filter(i => P.tiers.size===0 || P.tiers.has(tierOf(sprites[i].id)));
+    if(!pool.length) pool = sprites.map((_,i)=>i);
+  }
+  function randItem(){ return pool.length ? pool[(Math.random()*pool.length)|0] : 0; }
   const INS=0.5/AW; // half-texel inset
   function addSprite(id,img){
     const k=sprites.length, col=k%COLS, row=(k/COLS)|0;
@@ -243,6 +263,7 @@
       ready=true; window.__diag.ready=true; window.__diag.sprites=sprites.length;
       boot.style.opacity=0; loadbar.style.opacity=0;
       document.getElementById('count').max=sprites.length;
+      rebuildPool();
       if(P.mode==='mosaic') buildGrid();
     },30);
   }
@@ -295,7 +316,7 @@
     const total=Math.min(gCols*gRows, MAX); cells=[];
     for(let i=0;i<total;i++){ const col=i%gCols, row=(i/gCols)|0;
       cells.push({ cx:(col+0.5)*gCellW, cy:(row+0.5)*gCellH, r:Math.random(),
-        item: sprites.length? (Math.random()*sprites.length)|0 : 0,
+        item: randItem(),
         flip:0, flipping:false, swapped:false, axis:Math.random()<0.5?0:1, next:T+rndInterval()*Math.random() }); }
   }
 
@@ -370,6 +391,21 @@
   mMos.onclick=()=>{ if(P.mode==='mosaic') return; P.mode='mosaic'; if(P.shape!=='square') setShape('square'); buildGrid(); applyMode(); };
   applyMode();
 
+  // ---- tier filter buttons ----
+  const tA=document.getElementById('tA'), tierBtns={'1':document.getElementById('t1'),
+        '2':document.getElementById('t2'), '3':document.getElementById('t3')};
+  function syncTierBtns(){ tA.classList.toggle('on',P.tiers.size===0);
+    for(const k in tierBtns) tierBtns[k].classList.toggle('on',P.tiers.has(k)); }
+  function applyTierFilter(){
+    rebuildPool();
+    order = pool.slice(); shuffle(order);
+    if(P.mode==='mosaic'){ for(const c of cells){ c.item=randItem();
+      if(P.paused){ c.flipping=false; c.flip=0; } else { c.flipping=true; c.flip=0; c.swapped=true; c.axis=Math.random()<0.5?0:1; } } }
+    syncTierBtns();
+  }
+  tA.onclick=()=>{ if(P.tiers.size===0) return; P.tiers.clear(); applyTierFilter(); };
+  for(const k in tierBtns){ tierBtns[k].onclick=()=>{ P.tiers.has(k)?P.tiers.delete(k):P.tiers.add(k); applyTierFilter(); }; }
+
   const panel=document.getElementById('panel'), toggleBtn=document.getElementById('toggleBtn');
   document.querySelector('#panel h1').addEventListener('dblclick',hidePanel);
   toggleBtn.onclick=showPanel;
@@ -399,7 +435,7 @@
               else { c.next=T+rndInterval(); }
             }
             if(c.flipping){ c.flip += dt/flipDur;
-              if(c.flip>=0.5 && !c.swapped){ c.item=(Math.random()*sprites.length)|0; c.swapped=true; }
+              if(c.flip>=0.5 && !c.swapped){ c.item=randItem(); c.swapped=true; }
               if(c.flip>=1){ c.flipping=false; c.flip=0; c.next=T+rndInterval(); } }
           }
           const s=sprites[c.item]; if(!s) continue;
@@ -420,7 +456,7 @@
         const spanX=W+unit*2;                  // horizontal wrap span
         const hbase=P.drift*W*0.13;            // horizontal scroll speed (px/s)
         const sway=P.swirl*unit*0.5;           // optional gentle vertical sway
-        const N=Math.min(P.count,sprites.length);
+        const N=Math.min(P.count,order.length);
         document.getElementById('vCount').textContent=N;
         const active=order.slice(0,N);
         for(const idx of active){ const s=sprites[idx];
