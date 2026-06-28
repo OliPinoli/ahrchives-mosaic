@@ -78,8 +78,8 @@
 <div id="panel">
   <h1>AH!</h1>
   <div class="btns">
-    <button id="mUni" class="on">✦ universe</button>
-    <button id="mMos">▦ mosaic</button>
+    <button id="mMos" class="on">▦ mosaic</button>
+    <button id="mUni">✦ universe</button>
   </div>
   <div class="sliders">
     <div class="row uni"><label>Heads <b id="vCount">—</b></label><input id="count" type="range" min="40" max="999" value="999"></div>
@@ -93,7 +93,7 @@
   </div>
   <div class="btns">
     <button id="bShape">◻</button>
-    <button id="bPause">⏸</button>
+    <button id="bPause" class="on">▶</button>
     <button id="bShuffle">⤮</button>
     <button id="bGlow" class="on">✦</button>
     <button id="bFlip">⤢</button>
@@ -131,8 +131,8 @@
   document.getElementById('sTotal').textContent = IDS.length;
 
   // ---- params from UI ----
-  const P = { count:IDS.length, swirl:0.30, depth:0.50, drift:0.35, size:1.0, shape:'round', paused:false, glow:true,
-              mode:'universe', mspeed:0.50, cell:90, activePct:60, flip:'both' };
+  const P = { count:IDS.length, swirl:0.30, depth:0.50, drift:0.35, size:1.0, shape:'square', paused:true, glow:true,
+              mode:'mosaic', mspeed:0.50, cell:90, activePct:60, flip:'both' };
   const bind = (id, key, f) => {
     const el=document.getElementById(id), out=document.getElementById('v'+id[0].toUpperCase()+id.slice(1));
     const upd=()=>{ const v=+el.value; P[key]= f? f(v): v; if(out) out.textContent=(typeof P[key]==='number'?(Number.isInteger(P[key])?P[key]:P[key].toFixed(2)):P[key]); };
