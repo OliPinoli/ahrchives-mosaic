@@ -107,6 +107,7 @@
     <div class="row mos"><label>Active <b id="vActive">60</b></label><input id="active" type="range" min="0" max="100" value="60"></div>
     <div class="row cellrow"><label>Cell <b id="vCell">90</b></label><input id="cell" type="range" min="44" max="180" value="90"></div>
     <div class="row tim"><label>Rain <b id="vFlick">50</b></label><input id="flick" type="range" min="0" max="100" value="50"></div>
+    <div class="row clu"><label>Speed <b id="vFly">0.40</b></label><input id="fly" type="range" min="0" max="150" value="40"></div>
   </div>
   <div class="btns">
     <button id="bShape">◻</button>
@@ -160,7 +161,11 @@
   // ---- params from UI ----
   const P = { count:IDS.length, swirl:0.30, depth:0.50, drift:0.35, size:1.0, shape:'square', paused:false,
               mode:'time', mspeed:0.50, cell:90, activePct:60, flip:'both', tiers:new Set(), favOnly:false, rainPct:50,
-              photoTarget:null, clusterTrait:'Realm' };
+              photoTarget:null, clusterTrait:'Realm', fly:0.40 };
+  // ---- galaxy fly-through camera (cluster mode): pilot forward through depth-layered trait nebulae ----
+  const CGAP=6.0;                                  // world-units between cluster centres along the corridor
+  let camZ=0, camX=0, camY=0, camTX=0, camTY=0, clusterL=CGAP, clusterReady=false;
+  const clusterVis=new Int32Array(IDS.length+8);   // reused visible-index scratch for the fly-through
   const bind = (id, key, f) => {
     const el=document.getElementById(id), out=document.getElementById('v'+id[0].toUpperCase()+id.slice(1));
     const upd=()=>{ const v=+el.value; P[key]= f? f(v): v; if(out) out.textContent=(typeof P[key]==='number'?(Number.isInteger(P[key])?P[key]:P[key].toFixed(2)):P[key]); };
@@ -175,6 +180,7 @@
   bind('cell','cell', v=>Math.round(v));
   bind('active','activePct', v=>Math.round(v));
   bind('flick','rainPct', v=>Math.round(v));
+  bind('fly','fly', v=>v/100);
   document.getElementById('vCount').textContent = P.count;
 
   // ---- shaders ----
@@ -485,13 +491,22 @@
     gW=W; gH=H;
     const key=P.clusterTrait, groups=new Map();
     for(let k=0;k<sprites.length;k++){ const v=traitVal(sprites[k].id,key); (groups.get(v)||groups.set(v,[]).get(v)).push(k); }
-    const keys=[...groups.keys()], G=keys.length, m=Math.min(W,H);
-    const cxm=W*0.5, cym=H*0.5, R=G>1?m*0.40:0;
-    keys.forEach((v,gi)=>{ const ang=G>1?(gi/G)*Math.PI*2 - Math.PI/2:0, gx=cxm+Math.cos(ang)*R*(W/m), gy=cym+Math.sin(ang)*R;
-      const arr=groups.get(v), baseR=Math.min(m*0.18, m*0.012*Math.sqrt(arr.length));
-      for(const k of arr){ const a=Math.random()*Math.PI*2, rr=Math.sqrt(Math.random())*baseR;
-        const s=sprites[k]; s.tx=gx+Math.cos(a)*rr; s.ty=gy+Math.sin(a)*rr; s.ts=m*0.03;
-        if(s._bx<=0 && s._by<=0){ s._bx=cxm+rnd(-50,50); s._by=cym+rnd(-50,50); } } });
+    const keys=[...groups.keys()], G=keys.length, GA=2.399963;       // golden angle → spiral clusters around the corridor
+    clusterL = Math.max(CGAP, G*CGAP);
+    keys.forEach((v,gi)=>{
+      const arr=groups.get(v);
+      const gz=(gi+0.5)*CGAP;                                        // each cluster sits further down the flight path
+      const gAng=gi*GA, gSpread=0.6;                                 // just off the central axis so you weave through them
+      const gx=Math.cos(gAng)*gSpread, gy=Math.sin(gAng)*gSpread;
+      const baseR=Math.min(2.3, 0.42*Math.sqrt(arr.length));         // bigger trait-groups = wider nebula
+      for(const k of arr){ const s=sprites[k];
+        const u=Math.random(), ct=Math.random()*2-1, ph=Math.random()*Math.PI*2;
+        const rr=Math.cbrt(u)*baseR, st=Math.sqrt(1-ct*ct);          // uniform point in a 3D ball
+        s.wx=gx+rr*st*Math.cos(ph); s.wy=gy+rr*st*Math.sin(ph); s.wz=gz+rr*ct*1.5;
+        s.ws=0.42*(0.85+Math.random()*0.4);                         // head world size (slight variation)
+      }
+    });
+    clusterReady=true;
   }
 
   // ---- interaction ----
@@ -507,11 +522,15 @@
         break; } }
       return;
     }
-    let best=null,bz=-1;                          // universe / clusters: hit-test the topmost head
+    let best=null,bz=-Infinity;                   // universe / clusters: hit-test the topmost head
     for(const s of sprites){ if(!s._bs) continue; const h=s._bs/2;
       if(mx>=s._bx-h&&mx<=s._bx+h&&my>=s._by-h&&my<=s._by+h&&s._z>bz){ best=s; bz=s._z; } }
     if(best){ best.focus=performance.now(); showCard(best.id); }
   });
+  // steer the fly-through: cursor position banks the camera; recentres when the pointer leaves
+  cv.addEventListener('pointermove', e=>{ if(P.mode!=='cluster') return;
+    camTX=((e.clientX/W)-0.5)*1.2; camTY=((e.clientY/H)-0.5)*1.2; });
+  cv.addEventListener('pointerleave', ()=>{ camTX=0; camTY=0; });
 
   // ---- info / buy card ----
   const CONTRACT='0xa179a765c52ced91647c082f02d7e737d7781cae';
@@ -570,7 +589,7 @@
     if(P.mode==='mosaic'){ for(const c of cells) startFade(c); }
     else if(P.mode==='time'){ for(const d of drops){ d.active=Math.random()<(P.rainPct/100); d.y=-rnd(1,gRows); } }
     else if(P.mode==='photo'){ buildPhotoGrid(IDS[(Math.random()*IDS.length)|0]); }
-    else if(P.mode==='cluster'){ P.clusterTrait=CLUSTER_TRAITS[(CLUSTER_TRAITS.indexOf(P.clusterTrait)+1)%CLUSTER_TRAITS.length]; buildClusters(); hint.textContent='grouped by: '+P.clusterTrait; }
+    else if(P.mode==='cluster'){ P.clusterTrait=CLUSTER_TRAITS[(CLUSTER_TRAITS.indexOf(P.clusterTrait)+1)%CLUSTER_TRAITS.length]; camZ=0; buildClusters(); hint.textContent='flying through: '+P.clusterTrait+' · move to steer · ⤮ regroup'; }
     else { for(const s of sprites){ s.r=Math.sqrt(Math.random()); s.a=rnd(0,Math.PI*2); s.zPh=rnd(0,Math.PI*2); s.base=rnd(0.55,1.35);} shuffle(order); }
   };
   const mTime=document.getElementById('mTime'), mPhoto=document.getElementById('mPhoto'), mCluster=document.getElementById('mCluster');
@@ -580,10 +599,11 @@
     document.querySelectorAll('.row.mos').forEach(e=>e.style.display=mos?'flex':'none');
     document.querySelectorAll('.row.tim').forEach(e=>e.style.display=tim?'flex':'none');
     document.querySelectorAll('.row.cellrow').forEach(e=>e.style.display=(mos||pho)?'flex':'none');
+    document.querySelectorAll('.row.clu').forEach(e=>e.style.display=clu?'flex':'none');
     mUni.classList.toggle('on',uni); mMos.classList.toggle('on',mos); mTime.classList.toggle('on',tim);
     mPhoto.classList.toggle('on',pho); mCluster.classList.toggle('on',clu);
     bFlip.style.display='none'; bShuffle.textContent='⤮';
-    hint.textContent = clu ? ('grouped by: '+P.clusterTrait) : (pho ? 'click a tile → rebuild the mosaic from it' : '');
+    hint.textContent = clu ? ('flying through: '+P.clusterTrait+' · move to steer · ⤮ regroup') : (pho ? 'click a tile → rebuild the mosaic from it' : '');
   }
   function setMode(m){
     if(P.mode===m) return; P.mode=m;
@@ -592,7 +612,7 @@
     if(m==='mosaic') buildGrid();
     else if(m==='time') timeDirty=true;
     else if(m==='photo') buildPhotoGrid(pickPhotoTarget());
-    else if(m==='cluster') buildClusters();
+    else if(m==='cluster'){ camZ=0; camX=camY=camTX=camTY=0; buildClusters(); }
     if(m!=='mosaic' && P.paused){ P.paused=false; bPause.classList.remove('on'); bPause.textContent='⏸'; }   // animated modes auto-play
     applyMode();
   }
@@ -701,14 +721,33 @@
         gl.drawArrays(gl.TRIANGLES,0,mo/5);
 
       } else if(P.mode==='cluster'){
-        if(gW!==W || gH!==H) buildClusters();
-        const k=Math.min(1, dt*3.2); let mo=0;
+        // galaxy fly-through: pilot forward down the corridor; heads stream past the cockpit, faces ahead grow from specks
+        if(!clusterReady) buildClusters();
+        const L=clusterL, F=Math.min(W,H)*0.92;
+        const flySpeed=0.6+P.fly*5;                                  // world-units / sec
+        if(!P.paused) camZ += flySpeed*dt;
+        camX += (camTX-camX)*Math.min(1,dt*2.5);                     // ease steering toward the cursor bank
+        camY += (camTY-camY)*Math.min(1,dt*2.5);
+        const FADE_NEAR=1.3, FADE_FAR=Math.min(CGAP, L*0.45);
+        const vis=clusterVis; let vn=0;
         for(let i=0;i<sprites.length;i++){ const s=sprites[i];
-          if(!P.paused){ s._bx += (s.tx-s._bx)*k; s._by += (s.ty-s._by)*k; }
-          if(s.focus){ const fk=Math.max(0,1-(now-s.focus)/2600); s._fk=fk; } else s._fk=0;
-          s._z=s._by; s._bs=s.ts*(1+0.5*s._fk);
-          const hs=s._bs*0.5, al=0.62+0.38*s._fk;
-          mo=quadWH(mainArr,mo, s._bx,s._by, hs,hs, s.u0,s.v0,s.u1,s.v1, al);
+          let relZ=(s.wz-camZ)%L; if(relZ<0) relZ+=L;                 // cyclic depth → endless loop through the clusters
+          if(relZ<0.05) relZ=0.05;
+          const aN=relZ<FADE_NEAR?relZ/FADE_NEAR:1;                  // fade out the head you pass (hides the wrap)
+          const aF=(L-relZ)<FADE_FAR?(L-relZ)/FADE_FAR:1;            // fade in from the far distance
+          const al=aN*aF;
+          if(al<0.012){ s._bs=0; continue; }
+          const inv=F/relZ;
+          const sx=W*0.5+(s.wx-camX)*inv, sy=H*0.5+(s.wy-camY)*inv;
+          const size=s.ws*inv;
+          if(size<1.2 || sx<-size || sx>W+size || sy<-size || sy>H+size){ s._bs=0; continue; }
+          s._bx=sx; s._by=sy; s._bs=size; s._z=-relZ; s._al=al;      // _z=-relZ → larger = closer (hit-test picks topmost)
+          vis[vn++]=i;
+        }
+        const list=vis.slice(0,vn).sort((a,b)=> sprites[a]._z - sprites[b]._z);   // far → near for correct alpha-over
+        let mo=0;
+        for(const idx of list){ const s=sprites[idx]; const hs=s._bs*0.5;
+          mo=quadWH(mainArr,mo, s._bx,s._by, hs,hs, s.u0,s.v0,s.u1,s.v1, s._al);
           if(mo>=mainArr.length-30) break;
         }
         gl.bindTexture(gl.TEXTURE_2D,atlasTex); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
