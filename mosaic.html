@@ -284,14 +284,17 @@
   }
 
   // ---- mosaic grid state ----
-  let cells=[], gCols=0, gRows=0, gCell=0, gW=0, gH=0;
+  let cells=[], gCols=0, gRows=0, gCell=0, gCellW=0, gCellH=0, gW=0, gH=0;
+  const MOSAIC_BAR=40;   // px reserved at the bottom for the soundbar so no tile hides behind it
   function rndInterval(){ const avg=6/(0.25+P.mspeed*3); return avg*(0.4+Math.random()*1.4); }
   function buildGrid(){
     gCell=P.cell; gW=W; gH=H;
-    gCols=Math.max(1,Math.ceil(W/gCell)); gRows=Math.max(1,Math.ceil(H/gCell));
+    const AH=Math.max(1,H-MOSAIC_BAR);                 // drawable height above the soundbar
+    gCols=Math.max(1,Math.round(W/gCell)); gRows=Math.max(1,Math.round(AH/gCell));
+    gCellW=W/gCols; gCellH=AH/gRows;                   // stretch to fill exactly — whole tiles, no clipping
     const total=Math.min(gCols*gRows, MAX); cells=[];
     for(let i=0;i<total;i++){ const col=i%gCols, row=(i/gCols)|0;
-      cells.push({ cx:(col+0.5)*gCell, cy:(row+0.5)*gCell, r:Math.random(),
+      cells.push({ cx:(col+0.5)*gCellW, cy:(row+0.5)*gCellH, r:Math.random(),
         item: sprites.length? (Math.random()*sprites.length)|0 : 0,
         flip:0, flipping:false, swapped:false, axis:Math.random()<0.5?0:1, next:T+rndInterval()*Math.random() }); }
   }
@@ -301,7 +304,7 @@
   cv.addEventListener('pointerdown', e=>{
     const mx=e.clientX,my=e.clientY;
     if(P.mode==='mosaic'){                       // click a tile → open its card
-      if(gCell>0){ const col=Math.floor(mx/gCell), row=Math.floor(my/gCell), ci=row*gCols+col;
+      if(gCellW>0){ const col=Math.floor(mx/gCellW), row=Math.floor(my/gCellH), ci=row*gCols+col;
         const c=cells[ci]; if(c){ const s=sprites[c.item]; if(s) showCard(s.id); } }
       return;
     }
@@ -386,7 +389,7 @@
 
       if(P.mode==='mosaic'){
         if(gCell!==P.cell || gW!==W || gH!==H) buildGrid();
-        const cell=gCell, flipDur=0.42;
+        const flipDur=0.42;
         let mo=0;
         const frac=P.activePct/100;
         for(const c of cells){
@@ -405,7 +408,7 @@
             if(P.flip==='null'){ dim=0.32+0.68*f; }                       // swap with a fade, no rotation
             else { const axis = P.flip==='h'?0 : P.flip==='v'?1 : c.axis;  // horizontal / vertical / random
               if(axis===0) sx=f; else sy=f; dim=0.45+0.55*f; } }
-          mo=quadWH(mainArr,mo, c.cx,c.cy, cell*0.5*sx, cell*0.5*sy, s.u0,s.v0,s.u1,s.v1, dim);
+          mo=quadWH(mainArr,mo, c.cx,c.cy, gCellW*0.5*sx, gCellH*0.5*sy, s.u0,s.v0,s.u1,s.v1, dim);
           if(mo>=mainArr.length-30) break;
         }
         gl.bindTexture(gl.TEXTURE_2D,atlasTex); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
