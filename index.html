@@ -99,9 +99,9 @@
   </div>
   <div class="sliders">
     <div class="row uni"><label>Heads <b id="vCount">—</b></label><input id="count" type="range" min="40" max="999" value="999"></div>
-    <div class="row uni"><label>Sway <b id="vSwirl">0.00</b></label><input id="swirl" type="range" min="0" max="150" value="0"></div>
-    <div class="row uni"><label>Depth <b id="vDepth">0.50</b></label><input id="depth" type="range" min="0" max="150" value="50"></div>
-    <div class="row uni"><label>Speed <b id="vDrift">0.35</b></label><input id="drift" type="range" min="0" max="150" value="35"></div>
+    <div class="row uni"><label>Sway <b id="vSwirl">0.18</b></label><input id="swirl" type="range" min="0" max="150" value="18"></div>
+    <div class="row uni"><label>Depth <b id="vDepth">0.26</b></label><input id="depth" type="range" min="0" max="150" value="26"></div>
+    <div class="row uni"><label>Speed <b id="vDrift">0.18</b></label><input id="drift" type="range" min="0" max="150" value="18"></div>
     <div class="row uni"><label>Size <b id="vSize">1.00</b></label><input id="size" type="range" min="40" max="200" value="100"></div>
     <div class="row mos"><label>Speed <b id="vMspeed">0.50</b></label><input id="mspeed" type="range" min="0" max="150" value="50"></div>
     <div class="row mos"><label>Active <b id="vActive">60</b></label><input id="active" type="range" min="0" max="100" value="60"></div>
@@ -792,13 +792,13 @@
           let x=s.sx*spanX - T*hbase*pf;        // continuous leftward drift
           x=((x%spanX)+spanX)%spanX - unit;     // wrap horizontally
           const y=unit*0.5 + s.sy*(H-unit) + Math.sin(T*s.spSp*0.8 + s.zPh)*sway;
-          s._bx=x; s._by=y; s._bs=(0.12+0.92*z)*s.base*unit*(1+0.35*s._fk);
+          s._bx=x; s._by=y; s._bs=(0.30+0.74*z)*s.base*unit*(1+0.35*s._fk);
         }
         active.sort((i,j)=>sprites[i]._z-sprites[j]._z);
 
         let mo=0;
         for(const idx of active){ const s=sprites[idx]; const size=s._bs; if(size<2) continue;
-          const al=Math.min(1,0.07+0.95*s._z+0.4*s._fk);
+          const al=Math.min(1,0.34+0.66*s._z+0.3*s._fk);
           const hs=size/2;   // axis-aligned upright squares (no rotation)
           mo=quad(mainArr,mo, s._bx,s._by,hs,1,0, s.u0,s.v0,s.u1,s.v1, al);
         }
