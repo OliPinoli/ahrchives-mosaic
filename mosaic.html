@@ -408,7 +408,7 @@
   function timeLayoutWidth(str){ let w=0; for(const ch of str) w+=glyphW(ch)+1; return w-1; }
   function logoItem(){ return pool.length? pool[(Math.random()*pool.length)|0] : (sprites.length?(Math.random()*sprites.length)|0:0); }
   let tColStart=0, tRowStart=0, fontCols=0, litSet=new Set(), timeDirty=true;
-  let ahT0=0, drops=[], logoMask=new Set();
+  let ahT0=0, drops=[];
   function buildLit(str){
     const lit=new Set(); let x=tColStart;
     for(const ch of str){ const g=FONT5[ch]||FONT5['0'], w=glyphW(ch);
@@ -428,11 +428,7 @@
     const x0=(W-gCols*cell)/2, y0=(AH-gRows*cell)/2;
     tColStart=Math.floor((gCols-fontCols)/2); tRowStart=Math.floor((gRows-5)/2);
     litSet=buildLit('AH!');
-    // logo mask = letters + their 8 neighbours, so the rain leaves a dark margin and the logo always reads
-    logoMask=new Set();
-    for(const idx of litSet){ const r=(idx/gCols)|0, c=idx%gCols;
-      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const rr=r+dr, cc=c+dc;
-        if(rr>=0&&rr<gRows&&cc>=0&&cc<gCols) logoMask.add(rr*gCols+cc); } }
+    // rain now flows through every non-logo cell (incl. those hugging the letters) — no dark margin
     // matrix-rain columns (staggered starts above the top edge)
     drops=[]; const rainFrac=P.rainPct/100;
     for(let col=0;col<gCols;col++) drops.push({ y:-(Math.random()*gRows*1.6), spd:rnd(4,11), len:rnd(4,9), active:Math.random()<rainFrac });
@@ -678,9 +674,9 @@
         gl.drawArrays(gl.TRIANGLES,0,mo/5);
 
       } else if(P.mode==='time'){
-        // AH! launch: black field, static colour logo in the centre, Matrix rain behind it after 2s
+        // AH! launch: black field, static 100%-lit colour logo in the centre, faded Matrix rain flowing behind & around it
         if(gW!==W || gH!==H || timeDirty){ buildTimeGrid(); timeDirty=false; }
-        const RAIN_MAX=0.6, hw=gCellW*0.5, hh=gCellH*0.5; let mo=0;
+        const RAIN_MAX=0.5, hw=gCellW*0.5, hh=gCellH*0.5; let mo=0;   // background luminosity never exceeds 50%
         let rs=(T-ahT0)-2; rs=rs<=0?0:rs>=1?1:rs; rs=rs*rs*(3-2*rs);   // rain fades in over ~1s starting at 2s
         if(!P.paused && rs>0){
           for(let col=0;col<gCols;col++){ const d=drops[col]; d.y+=d.spd*dt;
@@ -690,10 +686,9 @@
           const row=(i/gCols)|0, col=i%gCols;
           if(litSet.has(i)){                                  // the logo — always full-colour and static, on top
             mo=quadWH(mainArr,mo, c.cx,c.cy, hw,hh, s.u0,s.v0,s.u1,s.v1, 1);
-          } else if(logoMask.has(i)){ /* dark halo around the logo — draw nothing */ }
-          else if(rs>0){ const d=drops[col];
+          } else if(rs>0){ const d=drops[col];                // every other cell (incl. those hugging the logo) = rain
             if(d.active){ const dist=d.y-row;
-              if(dist>=0 && dist<d.len){ const head=dist<1?1.0:0; let a=(1-dist/d.len)*RAIN_MAX*rs; a=Math.min(RAIN_MAX, a+head*0.25*rs);
+              if(dist>=0 && dist<d.len){ const a=(1-dist/d.len)*RAIN_MAX*rs;   // clean 0→50% fade down the trail
                 if(a>0.01) mo=quadWH(mainArr,mo, c.cx,c.cy, hw,hh, s.u0,s.v0,s.u1,s.v1, a); } }
           }
           if(mo>=mainArr.length-30) break;
