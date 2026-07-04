@@ -187,12 +187,12 @@
     b:L.b0+Math.random()*(L.b1-L.b0), tw:Math.random()*6.28, ts:0.4+Math.random()*1.6, warm:Math.random()<0.14 });
     return {d:L.d, s:a}; });
 
-  var pan=0, warp=0, warpTarget=0;
+  var pan=0, warp=0;                                          // warp is a one-shot IMPULSE (decays), never a held state
   function draw(t){
     var w=cv.width, h=cv.height;
     ctx.clearRect(0,0,w,h);
-    warp += (warpTarget-warp)*0.04;
-    pan += (0.0011 + warp*0.07);                             // very gentle drift, eases up only during the descent
+    warp *= 0.965; if(warp<0.001) warp=0;                    // the fall "whoosh" decays back to rest within ~2s
+    pan += (0.0011 + warp*0.055);                            // calm constant drift + a brief boost only during the fall
     for(var li=0; li<stars.length; li++){ var layer=stars[li], ox=pan*layer.d;
       for(var i=0;i<layer.s.length;i++){ var st=layer.s[i];
         var fx=st.x+ox; fx-=Math.floor(fx);
@@ -219,11 +219,11 @@
 
   var archive=document.getElementById('archive');
   document.getElementById('descend').addEventListener('click', function(){
-    document.body.classList.add('descending'); warpTarget=1;
+    document.body.classList.add('descending'); warp=0.85;   // fire the impulse; it decays on its own
     setTimeout(function(){ archive.classList.add('show'); }, 900);
   });
   document.getElementById('ascend').addEventListener('click', function(){
-    archive.classList.remove('show'); document.body.classList.remove('descending'); warpTarget=0;
+    archive.classList.remove('show'); document.body.classList.remove('descending'); warp=0;
     seq.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('in'); });
   });
 })();
