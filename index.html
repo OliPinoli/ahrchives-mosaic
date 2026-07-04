@@ -166,9 +166,9 @@
   // ---- parallax starfield: a 2D canvas behind the (dark-origins-only transparent) GL stage ----
   const starCv=document.getElementById('stars'), sctx=starCv.getContext('2d');
   // d = parallax/brightness factor (nearer → moves more, brighter); counts kept fuller
-  const STAR_LAYERS=[{d:0.30,n:360,r0:0.5,r1:1.2,b0:0.30,b1:0.55},    // far: fullest, small, dimmer
-                     {d:0.62,n:210,r0:0.9,r1:1.9,b0:0.52,b1:0.85},    // mid
-                     {d:1.00,n:100,r0:1.4,r1:2.8,b0:0.78,b1:1.10}];   // near: fewer, big, brightest, parallax leaders
+  const STAR_LAYERS=[{d:0.26,n:440,r0:0.5,r1:1.2,b0:0.26,b1:0.50},    // far: fullest, small, dimmest (more depth separation)
+                     {d:0.60,n:250,r0:0.9,r1:1.9,b0:0.52,b1:0.86},    // mid
+                     {d:1.00,n:115,r0:1.5,r1:3.1,b0:0.84,b1:1.16}];   // near: fewer, bigger, brightest, parallax leaders
   let stars=[];
   function genStars(){ stars=STAR_LAYERS.map(L=>{ const a=[];
     for(let i=0;i<L.n;i++) a.push({x:Math.random(), y:Math.random(), r:L.r0+Math.random()*(L.r1-L.r0),
@@ -180,7 +180,7 @@
   function drawStars(tSec){
     let d=camAngle-_lastCA; _lastCA=camAngle;
     if(d>Math.PI) d-=6.283; else if(d<-Math.PI) d+=6.283;            // unwrap the orbit angle
-    starAccX += d*0.15;                                               // gentle drift (slowed down)
+    starAccX += d*0.10;                                               // gentle drift (slowed further)
     const w=starCv.width, h=starCv.height;
     const g=sctx.createRadialGradient(w*0.5,h*0.42,0, w*0.5,h*0.42,Math.hypot(w,h)*0.62);
     g.addColorStop(0,'#0a0e18'); g.addColorStop(1,'#030409');
@@ -191,8 +191,8 @@
       for(const st of layer.s){
         let fx=st.x+ox; fx-=Math.floor(fx); let fy=st.y+oy; fy-=Math.floor(fy);
         const px=fx*w, py=fy*h, b=st.b*(0.78+0.22*Math.sin(tSec*st.ts+st.tw)), r=st.r*DPR;
-        if(st.r>1.6){ sctx.beginPath(); sctx.arc(px,py,r*2.4,0,6.283);   // soft halo, stronger on the nearer layers
-          sctx.fillStyle=st.warm?`rgba(255,220,180,${b*0.11*layer.d})`:`rgba(150,190,255,${b*0.13*layer.d})`; sctx.fill(); }
+        if(st.r>1.6){ sctx.beginPath(); sctx.arc(px,py,r*2.6,0,6.283);   // soft halo, stronger on the nearer layers
+          sctx.fillStyle=st.warm?`rgba(255,220,180,${b*0.12*layer.d})`:`rgba(150,190,255,${b*0.15*layer.d})`; sctx.fill(); }
         sctx.beginPath(); sctx.arc(px,py,r,0,6.283);
         sctx.fillStyle=st.warm?`rgba(255,226,192,${b})`:`rgba(214,230,255,${b})`; sctx.fill();
       }
