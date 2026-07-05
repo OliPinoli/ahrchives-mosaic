@@ -30,14 +30,19 @@
     transition:filter 1.2s ease, transform 1.4s ease; }
   #stars{ position:fixed; inset:0; z-index:1; }
   #vign{ position:fixed; inset:0; z-index:2; pointer-events:none;
-    box-shadow:inset 0 0 240px 60px rgba(4,4,12,.7); }
+    box-shadow:inset 0 0 240px 60px rgba(4,4,12,.7); transition:box-shadow 1.2s ease; }
 
   /* ---- the AH! head, rising like a sun from the horizon ---- */
   #sun{ position:fixed; z-index:2; right:8vw; bottom:-6vh; width:min(46vh,380px); aspect-ratio:1;
     border-radius:50%; overflow:hidden; border:2px solid rgba(255,255,255,.12);
     box-shadow:0 0 120px 30px rgba(244,193,78,.45), 0 0 240px 80px rgba(224,138,99,.3);
-    transition:transform 1.4s cubic-bezier(.2,.7,.2,1), opacity 1s ease; }
-  #sun img{ width:100%; height:100%; object-fit:cover; display:block; filter:saturate(1.05); }
+    transition:transform 1.4s cubic-bezier(.2,.7,.2,1), opacity 1s ease; animation:sunhalo 7s ease-in-out infinite; }
+  #sun img{ width:100%; height:100%; object-fit:cover; display:block;
+    animation:sunlife 9s ease-in-out infinite, sunhue 13s ease-in-out infinite; }
+  @keyframes sunlife{ 0%,100%{ transform:rotate(-2deg) scale(1) } 50%{ transform:rotate(2deg) scale(1.02) } }
+  @keyframes sunhue{ 0%,100%{ filter:saturate(1.05) hue-rotate(0deg) } 50%{ filter:saturate(1.13) hue-rotate(7deg) } }
+  @keyframes sunhalo{ 0%,100%{ box-shadow:0 0 120px 30px rgba(244,193,78,.45), 0 0 240px 80px rgba(224,138,99,.30) }
+    50%{ box-shadow:0 0 150px 40px rgba(244,193,78,.55), 0 0 285px 96px rgba(224,138,99,.38) } }
   #sun::after{ content:""; position:absolute; inset:0;
     background:radial-gradient(circle at 50% 40%, rgba(255,240,210,.18), rgba(0,0,0,.25) 90%); }
 
@@ -114,29 +119,49 @@
     text-transform:uppercase; cursor:pointer; background:none; border:0; font-family:var(--mono); }
   #archive .back:hover{ color:var(--gold); }
 
-  /* while descending: darken the sunset to deep space, tilt the sky, sink the sun */
-  body.descending #grad{ filter:brightness(.4) saturate(.7); transform:scale(1.12) translateY(-3%); }
-  body.descending #sun{ transform:translateY(30vh) scale(.75); opacity:.5; }
+  /* while descending: sink the sunset into deep space (a faint ember remains at the horizon) */
+  body.descending #grad{ filter:brightness(.16) saturate(.5); transform:scale(1.16) translateY(-4%); }
+  body.descending #vign{ box-shadow:inset 0 0 300px 90px rgba(2,2,8,.85); }
+  body.descending #sun{ transform:translateY(34vh) scale(.7); opacity:.35; }
   body.descending .cap,
   body.descending #descend,
   body.descending #social,
   body.descending #title,
   body.descending #glitch{ opacity:0 !important; transition:opacity .5s ease; }
 
+  /* portals & narration RISE IN from the falling field — not a screen that cuts in */
+  #archive .narr{ opacity:0; transform:translateY(22px) rotate(-1deg); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+  #archive .portals .portal{ opacity:0; transform:translateY(28px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+  #archive.show .narr{ opacity:1; transform:translateY(0) rotate(-1deg); transition-delay:.15s; }
+  #archive.show .portals .portal{ opacity:1; transform:translateY(0); }
+  #archive.show .portals .portal:nth-child(1){ transition-delay:.45s; }
+  #archive.show .portals .portal:nth-child(2){ transition-delay:.6s; }
+
+  /* visible keyboard focus */
+  #descend:focus-visible, #archive .portal:focus-visible, #archive .back:focus-visible, #social a:focus-visible{
+    outline:2px solid var(--gold); outline-offset:3px; }
+
+  /* respect reduced-motion: kill animation/transition, reveal everything at rest */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; }
+    #grad,#sun,#sun img,#vign,.cap,#descend,#title,#social,#comet,#archive,#archive *{ transition:none !important; }
+    #glitch{ display:none; }
+  }
+
   @media (max-width:720px){
     #title .ah{ font-size:64px; } #sun{ right:50%; transform:translateX(50%); bottom:-4vh; }
-    body.descending #sun{ transform:translateX(50%) translateY(30vh) scale(.7); }
+    body.descending #sun{ transform:translateX(50%) translateY(34vh) scale(.7); }
     .cap{ max-width:180px; font-size:11px; }
   }
 </style>
 </head>
 <body>
-  <div id="grad"></div>
-  <canvas id="stars"></canvas>
-  <div id="vign"></div>
+  <div id="grad" aria-hidden="true"></div>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div id="vign" aria-hidden="true"></div>
 
-  <div id="sun"><img src="thumbs/999.jpg" alt=""></div>
-  <div id="comet"></div>
+  <div id="sun" aria-hidden="true"><img src="thumbs/999.jpg" alt=""></div>
+  <div id="comet" aria-hidden="true"></div>
 
   <div class="cap" id="cap1">I stepped into the <em>archives</em> —</div>
   <div class="cap" id="cap2">I shall offer them <em>art</em> — and <em>music</em> — to escape the confines of earth!</div>
@@ -148,7 +173,7 @@
     <div class="sub">999 alters · one hero</div>
   </div>
 
-  <div id="glitch"></div>
+  <div id="glitch" aria-hidden="true"></div>
   <button id="descend">descend into the archive ↓</button>
   <div id="social"><a href="https://x.com" target="_blank" rel="noopener">✦ X</a><a href="#">✉ mail</a></div>
 
@@ -173,12 +198,13 @@
 <script>
 (function(){
   "use strict";
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var cv=document.getElementById('stars'), ctx=cv.getContext('2d');
   var W,H,DPR=Math.min(devicePixelRatio||1,2);
   function resize(){ W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; cv.style.width=W+'px'; cv.style.height=H+'px'; }
   addEventListener('resize', resize); resize();
 
-  // starfield — same layered-parallax spirit as the mosaic's origins field
+  // starfield — layered parallax (same spirit as the mosaic's origins field)
   var LAYERS=[{d:0.20,n:280,r0:0.4,r1:1.1,b0:0.25,b1:0.55},
               {d:0.55,n:150,r0:0.8,r1:1.8,b0:0.45,b1:0.8},
               {d:1.00,n:70, r0:1.3,r1:2.7,b0:0.7, b1:1.05}];
@@ -187,45 +213,79 @@
     b:L.b0+Math.random()*(L.b1-L.b0), tw:Math.random()*6.28, ts:0.4+Math.random()*1.6, warm:Math.random()<0.14 });
     return {d:L.d, s:a}; });
 
-  var pan=0, warp=0;                                          // warp is a one-shot IMPULSE (decays), never a held state
+  // distant heads that MATERIALISE out of the field as you fall (stars -> heads -> the archive)
+  var HEADS=[]; for(var hi=0;hi<56;hi++){ var id=1+((Math.random()*999)|0);
+    var im=new Image(); im.src='thumbs/'+id+'.jpg';
+    HEADS.push({img:im, x:Math.random(), y:Math.random(), d:0.35+Math.random()*0.5, s:8+Math.random()*17, o:0.16+Math.random()*0.3, tw:Math.random()*6.28}); }
+
+  var pan=0, fall=0, fallVel=0, impulse=0, emerge=0, mx=0, my=0, mtx=0, mty=0;
+  function falling(){ return document.body.classList.contains('descending'); }
+  function frac(v){ return v-Math.floor(v); }
+
   function draw(t){
-    var w=cv.width, h=cv.height;
+    if(document.hidden) return;                              // pause rendering when the tab is hidden
+    var w=cv.width, h=cv.height, F=falling();
     ctx.clearRect(0,0,w,h);
-    warp *= 0.965; if(warp<0.001) warp=0;                    // the fall "whoosh" decays back to rest within ~2s
-    pan += (0.0011 + warp*0.055);                            // calm constant drift + a brief boost only during the fall
-    for(var li=0; li<stars.length; li++){ var layer=stars[li], ox=pan*layer.d;
+    pan += F ? 0.0005 : 0.0011;                              // horizontal ambient drift (calmer once we tip into the fall)
+    var tv = F ? 0.0016 : 0;                                 // sustained gentle DOWNWARD fall while descended
+    fallVel += (tv - fallVel)*0.03;
+    impulse *= 0.93; if(impulse<0.0002) impulse=0;           // the initial "whoosh", decays into the sustained fall
+    fall += fallVel + impulse;
+    emerge += ((F?1:0) - emerge)*0.02;                       // distant heads + deep space fade in as you descend
+    mx += (mtx-mx)*0.06; my += (mty-my)*0.06;                // ease the cursor parallax
+    var mox=mx*0.010, moy=my*0.010;
+
+    for(var li=0; li<stars.length; li++){ var layer=stars[li], ox=(pan+mox)*layer.d, oy=(fall+moy)*layer.d;
       for(var i=0;i<layer.s.length;i++){ var st=layer.s[i];
-        var fx=st.x+ox; fx-=Math.floor(fx);
-        var fy=st.y + warp*layer.d*0.22; fy-=Math.floor(fy);   // stars ease downward as you fall
-        var px=fx*w, py=fy*h, b=st.b*(0.75+0.25*Math.sin(t*0.001*st.ts+st.tw))*(0.5+0.5*(1-fy)), r=st.r*DPR*(1+warp*1.1);
+        var fx=frac(st.x+ox), fy=frac(st.y+oy);
+        var px=fx*w, py=fy*h, b=st.b*(0.75+0.25*Math.sin(t*0.001*st.ts+st.tw)), r=st.r*DPR*(1+impulse*1.1);
         if(st.r>1.5){ ctx.beginPath(); ctx.arc(px,py,r*2.4,0,6.28);
           ctx.fillStyle=st.warm?'rgba(255,220,180,'+(b*0.12*layer.d)+')':'rgba(150,190,255,'+(b*0.14*layer.d)+')'; ctx.fill(); }
-        if(warp>0.05){ ctx.strokeStyle=st.warm?'rgba(255,226,192,'+(b*0.6)+')':'rgba(214,230,255,'+(b*0.6)+')';
-          ctx.lineWidth=r; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py+warp*26*layer.d); ctx.stroke(); }
+        if(impulse>0.004){ ctx.strokeStyle=st.warm?'rgba(255,226,192,'+(b*0.6)+')':'rgba(214,230,255,'+(b*0.6)+')';
+          ctx.lineWidth=r; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py+impulse*300*layer.d); ctx.stroke(); }
         ctx.beginPath(); ctx.arc(px,py,r,0,6.28);
         ctx.fillStyle=st.warm?'rgba(255,226,192,'+b+')':'rgba(214,230,255,'+b+')'; ctx.fill();
       }
     }
+    if(emerge>0.01){                                         // the archive materialising: faint heads drifting in the deep
+      for(var k=0;k<HEADS.length;k++){ var hd=HEADS[k], hm=hd.img; if(!hm.complete||!hm.naturalWidth) continue;
+        var hx=frac(hd.x+(pan+mox)*hd.d), hy=frac(hd.y+(fall+moy)*hd.d), hpx=hx*w, hpy=hy*h, sz=hd.s*DPR;
+        ctx.save(); ctx.globalAlpha=emerge*hd.o*(0.7+0.3*Math.sin(t*0.0006+hd.tw));
+        ctx.beginPath(); ctx.arc(hpx,hpy,sz,0,6.28); ctx.clip();
+        ctx.drawImage(hm, hpx-sz, hpy-sz, sz*2, sz*2); ctx.restore();
+      }
+      ctx.globalAlpha=1;
+    }
     requestAnimationFrame(draw);
   }
-  requestAnimationFrame(draw);
 
-  // choreograph the entrance
-  var seq=['title','cap1','cap2','descend','cap3','social'];
-  seq.forEach(function(id,i){ setTimeout(function(){ var el=document.getElementById(id); if(el) el.classList.add('in'); }, 500+i*550); });
-  setTimeout(function(){ document.getElementById('comet').animate(
-    [{transform:'translate(0,0) rotate(-18deg)',opacity:0},{opacity:1,offset:0.2},{transform:'translate(60vw,26vh) rotate(-18deg)',opacity:0}],
-    {duration:2600, easing:'ease-in'}); }, 2600);
+  if(!reduced){ addEventListener('pointermove', function(e){ mtx=(e.clientX/innerWidth-0.5)*2; mty=(e.clientY/innerHeight-0.5)*2; }); }
 
+  // ---- surface <-> archive, keyboard + entrance ----
   var archive=document.getElementById('archive');
-  document.getElementById('descend').addEventListener('click', function(){
-    document.body.classList.add('descending'); warp=0.85;   // fire the impulse; it decays on its own
-    setTimeout(function(){ archive.classList.add('show'); }, 900);
+  var seq=['title','cap1','cap2','descend','cap3','social'];
+  function revealSurface(){ seq.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('in'); }); }
+  function descend(){ if(falling()) return; document.body.classList.add('descending'); if(!reduced) impulse=0.03;
+    setTimeout(function(){ archive.classList.add('show'); }, reduced?0:900); }
+  function ascend(){ archive.classList.remove('show'); document.body.classList.remove('descending'); impulse=0; revealSurface(); }
+  document.getElementById('descend').addEventListener('click', descend);
+  document.getElementById('ascend').addEventListener('click', ascend);
+  addEventListener('keydown', function(e){
+    if(e.key==='Escape' && (falling()||archive.classList.contains('show'))){ ascend(); return; }
+    var ae=document.activeElement, tag=ae?ae.tagName:'';
+    if(e.key==='Enter' && !falling() && tag!=='A' && tag!=='BUTTON'){ descend(); }   // Enter anywhere descends (the button handles its own Enter)
   });
-  document.getElementById('ascend').addEventListener('click', function(){
-    archive.classList.remove('show'); document.body.classList.remove('descending'); warp=0;
-    seq.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.add('in'); });
-  });
+
+  if(reduced){
+    revealSurface(); draw(0); document.getElementById('comet').style.opacity=1;   // one static frame, no loop
+  } else {
+    requestAnimationFrame(draw);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) requestAnimationFrame(draw); });
+    seq.forEach(function(id,i){ setTimeout(function(){ var el=document.getElementById(id); if(el) el.classList.add('in'); }, 500+i*550); });
+    setTimeout(function(){ document.getElementById('comet').animate(
+      [{transform:'translate(0,0) rotate(-18deg)',opacity:0},{opacity:1,offset:0.2},{transform:'translate(60vw,26vh) rotate(-18deg)',opacity:0}],
+      {duration:2600, easing:'ease-in'}); }, 2600);
+  }
 })();
 </script>
 </body>
