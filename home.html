@@ -27,7 +27,7 @@
   /* ---- logo cluster pinned to the BOTTOM ---- */
   #foot{ position:fixed; left:0; right:0; bottom:4vh; z-index:5; display:flex; flex-direction:column;
     align-items:center; gap:6px; pointer-events:none; }
-  #logo{ width:min(30vh,66vw,360px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
+  #logo{ width:min(15vh,30vw,150px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
   #logo.in{ opacity:1; }
   #logoFallback{ font-weight:900; font-size:clamp(22px,5vw,40px); letter-spacing:-.02em; line-height:.86;
     text-align:center; text-transform:uppercase; -webkit-text-stroke:1px #111; color:#fff;
@@ -41,15 +41,31 @@
   .orb{ position:fixed; z-index:6; left:0; top:0; width:98px; text-align:center; cursor:grab;
     touch-action:none; will-change:transform; user-select:none; }
   .orb:active{ cursor:grabbing; }
-  .orb .chip{ width:74px; height:74px; margin:0 auto; border-radius:50%; background:#fff; border:2px solid #111;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 10px 22px rgba(20,16,24,.18), 0 2px 0 #111;
+  .orb .chip{ width:78px; height:78px; margin:0 auto; border-radius:50%; background:#fff; border:2px solid #111;
+    overflow:hidden; box-shadow:0 10px 22px rgba(20,16,24,.18), 0 2px 0 #111;
     transition:transform .16s cubic-bezier(.2,.7,.2,1), box-shadow .16s; }
-  .orb .chip svg{ width:38px; height:38px; }
-  .orb:hover .chip{ transform:translateY(-3px) scale(1.05); box-shadow:0 18px 34px rgba(20,16,24,.26), 0 2px 0 #111; }
+  .orb .chip img{ width:100%; height:100%; object-fit:cover; display:block; -webkit-user-drag:none; }
+  .orb:hover .chip{ transform:translateY(-3px) scale(1.06); box-shadow:0 18px 34px rgba(20,16,24,.26), 0 2px 0 #111; }
   .orb .lbl{ margin-top:9px; font-size:10.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#111; }
   .orb .sub{ font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; color:#9a92a0; margin-top:2px; }
   .orb.dragging .chip{ transform:scale(1.12) rotate(-4deg); }
+
+  /* ---- thought-trail bubbles rising from his head to the world-orbs ---- */
+  .tdot{ position:fixed; z-index:4; border-radius:50%; background:#fff; border:1.5px solid #111;
+    box-shadow:0 3px 8px rgba(20,16,24,.16); pointer-events:none; opacity:0; transition:opacity .7s ease; }
+  .tdot.in{ opacity:1; }
+
+  /* ---- sparse comic messages (the artist's voice) ---- */
+  .cap{ position:fixed; z-index:5; max-width:210px; background:#f3ead6; color:#171016; border:2px solid #111;
+    padding:9px 12px; font-weight:700; font-style:italic; text-transform:uppercase; letter-spacing:.01em;
+    line-height:1.28; font-size:12px; box-shadow:4px 4px 0 rgba(0,0,0,.26); pointer-events:none;
+    opacity:0; transform:translateY(10px) rotate(var(--rot,-1.4deg)); transition:opacity .8s ease, transform .8s ease; }
+  .cap em{ color:#a03828; font-style:italic; }
+  .cap.in{ opacity:1; transform:translateY(0) rotate(var(--rot,-1.4deg)); }
+  #cap1{ left:5vw;  top:24vh;    --rot:-1.7deg; }
+  #cap2{ right:5vw; top:38vh;    --rot:1.5deg; text-align:right; }
+  #cap3{ left:8vw;  bottom:15vh; --rot:-1.1deg; }
+  @media (max-width:860px){ .cap{ display:none; } }        /* keep the phone view clean */
 
   /* ---- the world reveal (circle bloom out of the icon) ---- */
   #reveal{ position:fixed; inset:0; z-index:20; pointer-events:none;
@@ -90,7 +106,13 @@
   #wMusic, #reveal.toMusic{ background:#0d0b12; }
   #wMusic{ color:#efe7f6; } #wMusic .btn{ color:#e08a63; } #wMusic .card{ border-color:rgba(255,255,255,.12); }
 
-  body.opening #stage, body.opening .orb{ opacity:.25; transition:opacity .5s ease; pointer-events:none; }
+  /* the descent: the home plunges away as you fall past it into the world */
+  body.opening #stage{ transform:translateY(-7vh) scale(1.07); opacity:.10;
+    transition:transform .6s cubic-bezier(.6,0,.35,1), opacity .5s ease; pointer-events:none; }
+  body.opening .orb, body.opening .cap, body.opening .tdot, body.opening #foot{ opacity:0 !important;
+    transition:opacity .4s ease; pointer-events:none; }
+  .world .wrap{ transform:translateY(34px); transition:transform .7s cubic-bezier(.2,.7,.2,1) .12s; }
+  .world.show .wrap{ transform:translateY(0); }
 
   #hint{ position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:5; font-size:10.5px;
     letter-spacing:.16em; text-transform:uppercase; color:#b3abba; opacity:0; transition:opacity 1s ease 1.4s; }
@@ -110,21 +132,29 @@
     <div id="tag">999 alters · one hero</div>
   </footer>
 
-  <!-- floating worlds -->
+  <!-- thought-trail bubbles (positioned from his head in JS) -->
+  <div class="tdot" id="td0"></div><div class="tdot" id="td1"></div><div class="tdot" id="td2"></div>
+
+  <!-- floating worlds — alter heads bubbling up as his thoughts -->
   <a class="orb" id="oArchives" href="index.html" data-world="Archives" data-key="archives">
-    <div class="chip"><svg viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="2.4"><rect x="6" y="6" width="12" height="12"/><rect x="22" y="6" width="12" height="12"/><rect x="6" y="22" width="12" height="12"/><rect x="22" y="22" width="12" height="12"/></svg></div>
+    <div class="chip"><img src="thumbs/2.jpg" alt="" /></div>
     <div class="lbl">Archives</div><div class="sub">999 NFT</div>
   </a>
   <a class="orb" id="oBook" href="#book" data-world="Book" data-key="book">
-    <div class="chip"><svg viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="2.4" stroke-linejoin="round"><path d="M20 9c-4-2.5-9-2.5-12 0v22c3-2.5 8-2.5 12 0 4-2.5 9-2.5 12 0V9c-3-2.5-8-2.5-12 0z"/><path d="M20 9v22"/></svg></div>
+    <div class="chip"><img src="thumbs/77.jpg" alt="" /></div>
     <div class="lbl">Book</div><div class="sub">the story</div>
   </a>
   <a class="orb" id="oMusic" href="#music" data-world="Music" data-key="music">
-    <div class="chip"><svg viewBox="0 0 40 40" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 27V11l16-3v13"/><circle cx="12" cy="28" r="3.4"/><circle cx="28" cy="24" r="3.4"/></svg></div>
+    <div class="chip"><img src="thumbs/982.jpg" alt="" /></div>
     <div class="lbl">Music</div><div class="sub">the sound</div>
   </a>
 
-  <div id="hint">drag the worlds · tap to enter</div>
+  <!-- sparse comic messages -->
+  <div class="cap" id="cap1">I stepped into the <em>archives</em> —</div>
+  <div class="cap" id="cap2">to offer them <em>art</em>, and <em>music</em>, and escape the confines of earth.</div>
+  <div class="cap" id="cap3">and that, as I recall, was one of my <em>finest hours</em>.</div>
+
+  <div id="hint">drag the worlds · tap to descend</div>
 
   <!-- reveal veil + worlds -->
   <div id="reveal" aria-hidden="true"></div>
@@ -265,7 +295,8 @@
   logo.onload=function(){ logoFb.style.display='none'; logo.classList.add('in'); if(window._sizeHero)window._sizeHero(); };
   logo.onerror=function(){ logo.style.display='none'; logoFb.classList.add('in'); if(window._sizeHero)window._sizeHero(); };
   logo.src='assets/logo.png';
-  setTimeout(function(){ document.getElementById('tag').classList.add('in'); document.getElementById('hint').classList.add('in'); }, 300);
+  setTimeout(function(){ ['tag','hint','td0','cap1','td1','cap2','td2','cap3'].forEach(function(id,i){
+    setTimeout(function(){ var e=document.getElementById(id); if(e) e.classList.add('in'); }, i*150); }); }, 400);
 
   /* pointer / gyro parallax */
   if(!reduced){
@@ -281,7 +312,7 @@
   });
   function place(o){ o.el.style.transform='translate('+(o.cur.x-o.el.offsetWidth/2)+'px,'+(o.cur.y-36)+'px)'; }
   function layout(){ var W=innerWidth,H=innerHeight;
-    var pts=[ {x:0.18,y:0.13}, {x:0.50,y:0.11}, {x:0.82,y:0.13} ];   // archives / book / music — across the top
+    var pts=[ {x:0.17,y:0.16}, {x:0.50,y:0.10}, {x:0.83,y:0.16} ];   // archives / book / music — an arc of thoughts
     orbs.forEach(function(o,i){ o.home.x=pts[i].x*W; o.home.y=pts[i].y*H;
       if(o.cur.x===0&&o.cur.y===0){ o.cur.x=o.home.x; o.cur.y=o.home.y; }
       place(o); });                                                  // position now — don't wait for the first rAF
@@ -293,10 +324,19 @@
     var footTop=document.getElementById('foot').getBoundingClientRect().top;
     var iconsBottom=0; orbs.forEach(function(o){ iconsBottom=Math.max(iconsBottom, o.home.y+o.el.offsetHeight-36); });
     var band=footTop-iconsBottom;
-    var size=Math.max(200, Math.min(band-26, innerWidth*0.88, 680));  // as big as fits, capped
+    var size=Math.max(200, Math.min(band-24, innerWidth*0.90, 760));  // hero dominant: as big as fits, capped
     heroWrap.style.width=size+'px'; heroWrap.style.height=size+'px';
     heroWrap.style.top=((iconsBottom+footTop)/2)+'px';               // centre in the band, not the viewport
-    sizeCanvas();
+    sizeCanvas(); positionThought();
+  }
+  // the thought-trail: small bubbles rising from just above his head to the centre world-orb
+  var tdots=[document.getElementById('td0'),document.getElementById('td1'),document.getElementById('td2')];
+  function positionThought(){
+    var hr=heroWrap.getBoundingClientRect(), size=hr.width||300;
+    var hx=hr.left+0.64*size, hy=hr.top+0.05*size;                   // just above his head (upper-right of the collage)
+    var mid=orbs[1].home, ts=[0.30,0.55,0.78], sz=[7,10,13];
+    tdots.forEach(function(d,i){ if(!d) return; var t=ts[i], x=hx+(mid.x-hx)*t, y=hy+(mid.y-hy)*t;
+      d.style.width=sz[i]+'px'; d.style.height=sz[i]+'px'; d.style.left=(x-sz[i]/2)+'px'; d.style.top=(y-sz[i]/2)+'px'; });
   }
   window._sizeHero=sizeHero;                                         // let the async logo load re-trigger a resize
   layout(); addEventListener('resize', layout);
