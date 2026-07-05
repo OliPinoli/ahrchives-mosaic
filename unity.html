@@ -108,13 +108,63 @@
     font-weight:700; font-style:italic; text-transform:uppercase; font-size:14px; letter-spacing:.01em;
     box-shadow:4px 4px 0 rgba(0,0,0,.4); transform:rotate(-1deg); max-width:560px; text-align:center; }
   #archive .portals{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; }
-  #archive .portal{ position:relative; width:300px; max-width:82vw; text-decoration:none; color:#fff;
+  #archive .portal{ position:relative; width:300px; max-width:82vw; height:190px; text-decoration:none; color:#fff;
     border:1px solid rgba(255,255,255,.16); background:rgba(12,14,32,.6); backdrop-filter:blur(8px);
-    padding:20px; transition:transform .18s, border-color .18s, box-shadow .18s; }
-  #archive .portal:hover{ transform:translateY(-4px); border-color:var(--gold); box-shadow:0 20px 60px rgba(0,0,0,.5); }
-  #archive .portal .k{ font-size:26px; }
-  #archive .portal .t{ font-size:15px; font-weight:800; letter-spacing:.04em; margin-top:10px; }
-  #archive .portal .d{ font-size:11px; color:#b9c2d6; margin-top:6px; line-height:1.5; letter-spacing:.02em; }
+    padding:20px; overflow:hidden; transition:transform .22s cubic-bezier(.2,.7,.2,1), border-color .18s, box-shadow .22s;
+    --mx:0; --my:0; }
+  #archive .portal:hover{ transform:translateY(-4px); border-color:var(--gold); box-shadow:0 20px 70px rgba(0,0,0,.55); }
+  #archive .portal .k{ position:relative; z-index:3; font-size:26px; }
+  #archive .portal .t{ position:relative; z-index:3; font-size:15px; font-weight:800; letter-spacing:.04em; margin-top:10px;
+    text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  #archive .portal .d{ position:relative; z-index:3; font-size:11px; color:#c7cfe0; margin-top:6px; line-height:1.5; letter-spacing:.02em;
+    text-shadow:0 1px 8px rgba(0,0,0,.7); }
+
+  /* ---- the layered interior of each portal: a window into its world ---- */
+  #archive .pv{ position:absolute; inset:0; z-index:1; overflow:hidden; }
+  #archive .pv-scrim{ position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(155deg, rgba(6,7,16,.30) 0%, rgba(6,7,16,.66) 62%, rgba(6,7,16,.92) 100%); }
+  #archive .portal:hover .pv-scrim{ background:linear-gradient(155deg, rgba(6,7,16,.18) 0%, rgba(6,7,16,.52) 62%, rgba(6,7,16,.88) 100%); }
+
+  /* origins window: a tilted galaxy-ellipse of light drifting through the deep */
+  .pv-orbit{ background:radial-gradient(120% 90% at 68% 18%, rgba(124,199,255,.16), rgba(6,7,16,0) 60%); }
+  .pv-orbit .depth{ position:absolute; inset:-20%; transition:transform .5s cubic-bezier(.2,.7,.2,1); will-change:transform; }
+  .pv-orbit .ring{ position:absolute; left:50%; top:52%; width:230px; height:230px; margin:-115px 0 0 -115px;
+    border-radius:50%; border:1px solid rgba(124,199,255,.30); transform:rotateX(68deg) rotate(0deg);
+    box-shadow:0 0 40px rgba(124,199,255,.12) inset; animation:spin 26s linear infinite; }
+  .pv-orbit .ring.r2{ width:150px; height:150px; margin:-75px 0 0 -75px; border-color:rgba(179,136,255,.28);
+    animation-duration:17s; animation-direction:reverse; }
+  .pv-orbit .core{ position:absolute; left:50%; top:52%; width:34px; height:34px; margin:-17px 0 0 -17px;
+    border-radius:50%; overflow:hidden; box-shadow:0 0 26px 6px rgba(124,199,255,.5), 0 0 60px 14px rgba(124,199,255,.25); }
+  .pv-orbit .core img{ width:100%; height:100%; object-fit:cover; }
+  .pv-orbit .spk{ position:absolute; width:2px; height:2px; border-radius:50%; background:#dfeeff;
+    box-shadow:0 0 6px 1px rgba(200,225,255,.8); }
+
+  /* archive window: a receding grid of alters going back into the dark */
+  .pv-grid{ background:#070810; }
+  .pv-grid .depth{ position:absolute; left:50%; top:56%; width:150%; transform:translate(-50%,-50%) perspective(420px) rotateX(30deg);
+    display:grid; grid-template-columns:repeat(6,1fr); gap:5px; transform-origin:50% 0;
+    transition:transform .5s cubic-bezier(.2,.7,.2,1); will-change:transform; }
+  .pv-grid .cell{ aspect-ratio:1; overflow:hidden; border-radius:2px; background:#11131f; }
+  .pv-grid .cell img{ width:100%; height:100%; object-fit:cover; opacity:.9; }
+  .pv-grid::before{ content:""; position:absolute; inset:0; z-index:1;
+    background:linear-gradient(#070810 0%, rgba(7,8,16,0) 34%, rgba(7,8,16,0) 62%, #070810 100%); }
+
+  @keyframes spin{ to{ transform:rotateX(68deg) rotate(360deg); } }
+
+  /* ---- diving THROUGH a portal: it grows to become the world, others fall away ---- */
+  #dive{ position:fixed; inset:0; z-index:20; background:#05060a; opacity:0; pointer-events:none; transition:opacity .82s ease; }
+  body.diving #dive{ opacity:1; }
+  body.diving #archive{ z-index:22; }                 /* lift the archive (and its diving portal) ABOVE the black veil */
+  #archive .portal.dive{ z-index:21; border-color:transparent; background:#05060a;   /* becomes the destination's own space */
+    box-shadow:0 0 140px 40px rgba(124,199,255,.25);
+    transition:transform .82s cubic-bezier(.55,0,.35,1), opacity .82s ease, box-shadow .82s ease, background .82s ease; }
+  #archive #pOrigins.dive .pv-orbit{ background:radial-gradient(120% 100% at 50% 50%, rgba(124,199,255,.34), rgba(6,7,16,0) 60%); }
+  #archive #pOrigins.dive .core{ box-shadow:0 0 60px 16px rgba(124,199,255,.6), 0 0 130px 40px rgba(124,199,255,.3); }
+  #archive .portal.dive .k, #archive .portal.dive .t, #archive .portal.dive .d{ opacity:0; transition:opacity .3s ease; }
+  #archive .portal.dive .pv-scrim{ opacity:0; transition:opacity .6s ease; }
+  #archive.diving-away .portal:not(.dive){ opacity:0; transform:translateY(40px) scale(.9); transition:opacity .4s ease, transform .5s ease; }
+  #archive.diving-away .narr,
+  #archive.diving-away .back{ opacity:0; transition:opacity .35s ease; }
   #archive .back{ position:fixed; top:18px; left:20px; color:#cbb; font-size:12px; letter-spacing:.1em;
     text-transform:uppercase; cursor:pointer; background:none; border:0; font-family:var(--mono); }
   #archive .back:hover{ color:var(--gold); }
@@ -182,18 +232,28 @@
     <button class="back" id="ascend">↑ back to the surface</button>
     <div class="narr">…and so the nine hundred and ninety-nine alters were forged. choose your descent.</div>
     <div class="portals">
-      <a class="portal" href="index.html">
+      <a class="portal" id="pOrigins" href="index.html">
+        <div class="pv pv-orbit" aria-hidden="true">
+          <div class="depth">
+            <span class="ring"></span><span class="ring r2"></span>
+            <span class="core"><img src="thumbs/7.jpg" alt=""></span>
+          </div>
+        </div>
+        <div class="pv-scrim" aria-hidden="true"></div>
         <div class="k">◎</div>
         <div class="t">Enter the origins</div>
         <div class="d">Fly the galaxy of heads through the starfield — the cosmos the hero fell through.</div>
       </a>
-      <a class="portal" href="explorer.html">
+      <a class="portal" id="pArchive" href="explorer.html">
+        <div class="pv pv-grid" aria-hidden="true"><div class="depth"></div></div>
+        <div class="pv-scrim" aria-hidden="true"></div>
         <div class="k">⊞</div>
         <div class="t">Browse the archive</div>
         <div class="d">Filter all 999 alters by trait, rarity and aura — and read each one's page.</div>
       </a>
     </div>
   </div>
+  <div id="dive" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -270,6 +330,59 @@
   function ascend(){ archive.classList.remove('show'); document.body.classList.remove('descending'); impulse=0; revealSurface(); }
   document.getElementById('descend').addEventListener('click', descend);
   document.getElementById('ascend').addEventListener('click', ascend);
+
+  // ---- build the layered portal interiors ----
+  (function buildPortals(){
+    // origins: scatter faint sparks across the depth layer
+    var od=document.querySelector('#pOrigins .depth');
+    if(od){ for(var i=0;i<26;i++){ var s=document.createElement('span'); s.className='spk';
+      s.style.left=(Math.random()*100)+'%'; s.style.top=(Math.random()*100)+'%';
+      s.style.opacity=(0.25+Math.random()*0.6).toFixed(2); od.appendChild(s); } }
+    // archive: a receding grid of alter thumbnails (2 rows of 6, back into the dark)
+    var gd=document.querySelector('#pArchive .depth');
+    if(gd){ for(var j=0;j<18;j++){ var id=1+((Math.random()*999)|0);
+      var c=document.createElement('span'); c.className='cell';
+      var im=document.createElement('img'); im.src='thumbs/'+id+'.jpg'; im.alt=''; im.loading='lazy';
+      c.appendChild(im); gd.appendChild(c); } }
+  })();
+
+  // ---- per-portal cursor parallax: the interior layers shift, so they read as windows ----
+  if(!reduced){ Array.prototype.forEach.call(document.querySelectorAll('#archive .portal'), function(p){
+    var depth=p.querySelector('.depth'), grid=p.classList.contains('pv-grid')||!!p.querySelector('.pv-grid');
+    p.addEventListener('pointermove', function(e){
+      if(p.classList.contains('dive')) return;
+      var r=p.getBoundingClientRect(), nx=(e.clientX-r.left)/r.width-0.5, ny=(e.clientY-r.top)/r.height-0.5;
+      if(depth){ if(grid){ depth.style.transform='translate(-50%,-50%) perspective(420px) rotateX(30deg) translate('+(nx*-22)+'px,'+(ny*-10)+'px)'; }
+        else { depth.style.transform='translate('+(nx*16)+'px,'+(ny*16)+'px)'; } }
+    });
+    p.addEventListener('pointerleave', function(){
+      if(p.classList.contains('dive')||!depth) return;
+      depth.style.transform = grid ? 'translate(-50%,-50%) perspective(420px) rotateX(30deg)' : 'translate(0,0)';
+    });
+  }); }
+
+  // ---- dive THROUGH a portal: it grows to fill the view and fades into the destination ----
+  var diving=false;
+  function dive(portal, href){
+    if(diving) return; diving=true;
+    if(reduced){ location.href=href; return; }
+    var r=portal.getBoundingClientRect();
+    var cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var scale=Math.max(innerWidth/r.width, innerHeight/r.height)*1.18;
+    var dx=innerWidth/2-cx, dy=innerHeight/2-cy;
+    archive.classList.add('diving-away');
+    portal.classList.add('dive');
+    // let the class apply, then transform (so the transition runs)
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      portal.style.transform='translate('+dx+'px,'+dy+'px) scale('+scale+')';
+    }); });
+    document.body.classList.add('diving');
+    impulse=0.05;                                   // one last whoosh of the starfield behind it
+    setTimeout(function(){ location.href=href; }, 820);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('#archive .portal'), function(p){
+    p.addEventListener('click', function(e){ e.preventDefault(); dive(p, p.getAttribute('href')); });
+  });
   addEventListener('keydown', function(e){
     if(e.key==='Escape' && (falling()||archive.classList.contains('show'))){ ascend(); return; }
     var ae=document.activeElement, tag=ae?ae.tagName:'';
