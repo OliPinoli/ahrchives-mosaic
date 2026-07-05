@@ -17,20 +17,23 @@
   body{ font-family:var(--mono); color:var(--ink); background:var(--paper); overflow:hidden;
     -webkit-font-smoothing:antialiased; touch-action:none; }
 
-  /* ---- the stage: hero canvas + logo, centred ---- */
-  #stage{ position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:2vh; padding:4vh 4vw; }
-  #heroWrap{ position:relative; width:min(72vmin,640px); aspect-ratio:1; perspective:1100px;
+  /* ---- the stage: hero canvas in the MIDDLE ---- */
+  #stage{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #heroWrap{ position:relative; width:min(48vh,82vw,420px); aspect-ratio:1; perspective:1100px;
     transition:opacity .8s ease, transform .8s ease; }
   #hero{ width:100%; height:100%; display:block; transform-style:preserve-3d;
-    filter:drop-shadow(0 26px 40px rgba(20,16,24,.14)); }
-  #logo{ width:min(30vmin,220px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
+    filter:drop-shadow(0 26px 40px rgba(20,16,24,.12)); }
+
+  /* ---- logo cluster pinned to the BOTTOM ---- */
+  #foot{ position:fixed; left:0; right:0; bottom:4vh; z-index:5; display:flex; flex-direction:column;
+    align-items:center; gap:6px; pointer-events:none; }
+  #logo{ width:min(30vmin,210px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
   #logo.in{ opacity:1; }
   #logoFallback{ font-weight:900; font-size:clamp(22px,5vw,40px); letter-spacing:-.02em; line-height:.86;
     text-align:center; text-transform:uppercase; -webkit-text-stroke:1px #111; color:#fff;
     text-shadow:2px 2px 0 #111; opacity:0; transition:opacity 1s ease .3s; }
   #logoFallback.in{ opacity:1; }
-  #tag{ font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#8a8290; margin-top:-1vh;
+  #tag{ font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#8a8290;
     opacity:0; transition:opacity 1s ease .5s; }
   #tag.in{ opacity:.9; }
 
@@ -100,10 +103,12 @@
 <body>
   <div id="stage">
     <div id="heroWrap"><canvas id="hero" aria-label="Alter Hero collage"></canvas></div>
+  </div>
+  <footer id="foot">
     <img id="logo" alt="ALTER HERO" />
     <div id="logoFallback">Alter<br>Hero.</div>
     <div id="tag">999 alters · one hero</div>
-  </div>
+  </footer>
 
   <!-- floating worlds -->
   <a class="orb" id="oArchives" href="index.html" data-world="Archives" data-key="archives">
@@ -180,14 +185,22 @@
     im.src=src;
   }); }
 
-  function makeDepth(img){                                       // grayscale→invert→blur : ink=near(1), paper=far(0)
-    var s=256, c=document.createElement('canvas'); c.width=c.height=s; var x=c.getContext('2d');
-    x.fillStyle='#000'; x.fillRect(0,0,s,s);
-    x.filter='grayscale(1) invert(1) blur(9px)';
-    // contain the image into the square
-    var r=Math.min(s/img.width, s/img.height), w=img.width*r, h=img.height*r;
+  function makeDepth(img){                    // depth from ALPHA (drawn=near, empty=far), darker ink = nearer
+    var s=256;
+    var c=document.createElement('canvas'); c.width=c.height=s; var x=c.getContext('2d');
+    var r=Math.min(s/img.width,s/img.height), w=img.width*r, h=img.height*r;
     x.drawImage(img,(s-w)/2,(s-h)/2,w,h);
-    return c;
+    var id=x.getImageData(0,0,s,s), d=id.data;
+    for(var i=0;i<d.length;i+=4){
+      var a=d[i+3]/255;
+      var lum=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+      var depth=a*(1.0 - lum*0.55);            // content near; darkest ink nearest; transparent → 0 (flat page)
+      var v=Math.max(0,Math.min(255,depth*255))|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    x.putImageData(id,0,0);
+    var c2=document.createElement('canvas'); c2.width=c2.height=s; var x2=c2.getContext('2d');
+    x2.fillStyle='#000'; x2.fillRect(0,0,s,s); x2.filter='blur(7px)'; x2.drawImage(c,0,0);  // soften the falloff
+    return c2;
   }
 
   var prog, uMouse,uAmp,uTime, texC,texD, ready=false;
@@ -268,7 +281,7 @@
   });
   function place(o){ o.el.style.transform='translate('+(o.cur.x-o.el.offsetWidth/2)+'px,'+(o.cur.y-36)+'px)'; }
   function layout(){ var W=innerWidth,H=innerHeight;
-    var pts=[ {x:0.20,y:0.60}, {x:0.50,y:0.74}, {x:0.80,y:0.60} ];   // archives / book / music
+    var pts=[ {x:0.18,y:0.13}, {x:0.50,y:0.11}, {x:0.82,y:0.13} ];   // archives / book / music — across the top
     orbs.forEach(function(o,i){ o.home.x=pts[i].x*W; o.home.y=pts[i].y*H;
       if(o.cur.x===0&&o.cur.y===0){ o.cur.x=o.home.x; o.cur.y=o.home.y; }
       place(o); });                                                  // position now — don't wait for the first rAF
