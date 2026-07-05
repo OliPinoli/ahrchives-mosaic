@@ -123,17 +123,22 @@
     background:radial-gradient(1.5px 1.5px at 20% 30%,#cfe3ff,transparent),radial-gradient(1.5px 1.5px at 70% 60%,#bcd,transparent),
     radial-gradient(1px 1px at 40% 80%,#fff,transparent),radial-gradient(1px 1px at 85% 20%,#dfe,transparent),
     radial-gradient(1.5px 1.5px at 55% 15%,#cde,transparent); background-repeat:no-repeat; }
-  /* archives descent — full-height steps you scroll through (AH! → origins → mosaic → explorer) */
-  #wArchives.show{ scroll-snap-type:y proximity; }
-  #wArchives .step{ position:relative; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:14px; padding:80px 24px; scroll-snap-align:start; }
-  #wArchives .step .num{ font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:#7cc7ff; opacity:.9; }
-  #wArchives .step h2{ font-size:clamp(38px,9vw,86px); font-weight:900; letter-spacing:-.02em; line-height:.9; text-transform:uppercase; }
-  #wArchives .step p{ max-width:48ch; font-size:14px; line-height:1.7; opacity:.82; }
-  #wArchives .step .glyph{ font-size:46px; line-height:1; margin-bottom:4px; opacity:.9; }
-  #wArchives .step .btn{ margin-top:12px; }
-  #wArchives .cue{ position:absolute; bottom:26px; left:50%; transform:translateX(-50%); font-size:11px; letter-spacing:.24em;
-    text-transform:uppercase; color:#8fa6c8; animation:bob 1.8s ease-in-out infinite; }
+  /* archives descent — the built pages waiting as layers, cross-fading as you scroll through the universe */
+  #arcLayers{ position:fixed; inset:0; z-index:0; }
+  #arcLayers .layer{ position:fixed; inset:0; opacity:0; will-change:opacity; }
+  #arcLayers .layer iframe{ width:100%; height:100%; border:0; display:block; pointer-events:none; background:#05060a; }
+  .arc-rail{ height:360vh; }                                      /* scroll length driving the cross-fade */
+  .arc-cap{ position:fixed; left:0; right:0; bottom:9vh; z-index:3; text-align:center; pointer-events:none; }
+  .arc-cap .ac{ position:absolute; left:0; right:0; opacity:0; transition:opacity .25s ease; }
+  .arc-cap .ac b{ display:block; font-size:clamp(28px,6vw,58px); font-weight:900; letter-spacing:.02em; text-transform:uppercase;
+    color:#eef2ff; text-shadow:0 2px 30px rgba(0,0,0,.7); }
+  .arc-cap .ac span{ display:block; margin-top:6px; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:#9fb4d6;
+    text-shadow:0 1px 12px rgba(0,0,0,.8); }
+  .arc-cap .ac .open{ display:inline-block; margin-top:12px; pointer-events:auto; color:#7cc7ff; text-decoration:none;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:2px solid #7cc7ff; padding:9px 18px; transition:background .15s,color .15s; }
+  .arc-cap .ac .open:hover{ background:#7cc7ff; color:#04122a; }
+  .arc-cue{ position:fixed; bottom:3vh; left:50%; transform:translateX(-50%); z-index:3; font-size:11px; letter-spacing:.24em;
+    text-transform:uppercase; color:#8fa6c8; pointer-events:none; animation:bob 1.8s ease-in-out infinite; }
   @keyframes bob{ 0%,100%{ transform:translateX(-50%) translateY(0) } 50%{ transform:translateX(-50%) translateY(6px) } }
   /* book = warm paper */
   #wBook, #reveal.toBook{ background:#f3ead6; }
@@ -188,39 +193,21 @@
   <!-- reveal veil + worlds -->
   <div id="reveal" aria-hidden="true"></div>
 
-  <section class="world" id="wArchives" aria-hidden="true"><div class="starmini"></div>
+  <section class="world" id="wArchives" aria-hidden="true">
     <button class="back" data-close>← home</button>
-
-    <div class="step">
-      <div class="num">The Archives</div>
-      <h2>AH!<br>rchives</h2>
-      <p>Nine hundred and ninety-nine alters, one hero — the whole collection, forged in the fall. Scroll to descend through it.</p>
-      <div class="cue">scroll ↓</div>
+    <!-- the built pages, waiting as layers; cross-faded on scroll -->
+    <div id="arcLayers">
+      <div class="layer" data-src="index.html#matrix"><iframe title="AH! matrix"></iframe></div>
+      <div class="layer" data-src="index.html#origins"><iframe title="Origins"></iframe></div>
+      <div class="layer" data-src="explorer.html"><iframe title="Explorer"></iframe></div>
     </div>
-
-    <div class="step">
-      <div class="num">01 · Origins</div>
-      <div class="glyph">◎</div>
-      <h2>Origins</h2>
-      <p>Fly the galaxy of heads through the starfield — the cosmos the hero fell through.</p>
-      <a class="btn" href="index.html">Enter the origins →</a>
+    <div class="arc-cap">
+      <div class="ac" data-i="0"><b>AH! Matrix</b><span>999 heads · the archive awakes</span><a class="open" href="index.html#matrix" target="_blank" rel="noopener">open ↗</a></div>
+      <div class="ac" data-i="1"><b>Origins</b><span>the galaxy the hero fell through</span><a class="open" href="index.html#origins" target="_blank" rel="noopener">open ↗</a></div>
+      <div class="ac" data-i="2"><b>Explorer</b><span>filter every alter · read its page</span><a class="open" href="explorer.html" target="_blank" rel="noopener">open ↗</a></div>
     </div>
-
-    <div class="step">
-      <div class="num">02 · The wall</div>
-      <div class="glyph">▦</div>
-      <h2>Mosaic</h2>
-      <p>All 999 heads at once — the full mosaic wall, side B of the origins.</p>
-      <a class="btn" href="index.html">Open the mosaic →</a>
-    </div>
-
-    <div class="step">
-      <div class="num">03 · Explore</div>
-      <div class="glyph">⊞</div>
-      <h2>Explorer</h2>
-      <p>Filter every alter by trait, rarity and aura — and read each one's page.</p>
-      <a class="btn" href="explorer.html">Browse the archive →</a>
-    </div>
+    <div class="arc-cue">scroll to descend ↓</div>
+    <div class="arc-rail"></div>
   </section>
 
   <section class="world" id="wBook" aria-hidden="true">
@@ -400,6 +387,23 @@
 
   /* ===================== 3. dive into a world (circle bloom) ===================== */
   var reveal=document.getElementById('reveal'), openWorld=null;
+
+  // archives = a layered descent: the built pages wait as iframes and cross-fade on scroll
+  var arcWorld=document.getElementById('wArchives'), arcLoaded=false;
+  var arcLayers=[].slice.call(document.querySelectorAll('#arcLayers .layer'));
+  var arcCaps=[].slice.call(document.querySelectorAll('.arc-cap .ac'));
+  var arcCue=document.querySelector('.arc-cue');
+  function arcLoad(){ if(arcLoaded) return; arcLoaded=true;           // load the heavy iframes only once you descend
+    arcLayers.forEach(function(L){ L.querySelector('iframe').src=L.getAttribute('data-src'); }); }
+  function clamp01(v){ return v<0?0:v>1?1:v; }
+  function arcScroll(){                                               // 0 = matrix, 1 = origins, 2 = explorer
+    var vh=arcWorld.clientHeight||innerHeight, t=arcWorld.scrollTop/vh;
+    arcLayers.forEach(function(L,i){ L.style.opacity=clamp01(1-Math.abs(t-i)); });
+    arcCaps.forEach(function(c,i){ c.style.opacity=clamp01(1-Math.abs(t-i)*1.5); });
+    if(arcCue) arcCue.style.opacity = t<0.35 ? 1 : 0;
+  }
+  arcWorld.addEventListener('scroll', arcScroll, {passive:true});
+
   function enter(o, sx, sy){
     if(document.body.classList.contains('opening')) return;
     var world=document.getElementById('w'+o.world); if(!world) return;
@@ -408,8 +412,9 @@
     reveal.style.setProperty('--rx',(sx/innerWidth*100)+'%');
     reveal.style.setProperty('--ry',(sy/innerHeight*100)+'%');
     document.body.classList.add('opening');
-    setTimeout(function(){ world.classList.add('show'); world.setAttribute('aria-hidden','false'); world.scrollTop=0; },
-      reduced?0:520);
+    if(o.world==='Archives') arcLoad();
+    setTimeout(function(){ world.classList.add('show'); world.setAttribute('aria-hidden','false'); world.scrollTop=0;
+      if(o.world==='Archives') arcScroll(); }, reduced?0:520);
   }
   function close(){ if(!openWorld) return; var w=openWorld;
     w.classList.remove('show'); w.setAttribute('aria-hidden','true');

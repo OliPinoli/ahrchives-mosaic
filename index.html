@@ -95,9 +95,12 @@
     transition:background .15s, transform .12s; }
   #cardFav:hover{ background:rgba(255,196,124,.22); }
   #cardFav.on{ background:rgba(255,196,124,.28); border-color:rgba(255,196,124,.7); transform:scale(1.08); }
+  /* embedded as a background layer (home descent): hide the chrome for a clean cinematic view */
+  html.embed #panel, html.embed #hint, html.embed #loadbar, html.embed #toggleBtn{ display:none !important; }
 </style>
 </head>
 <body>
+<script>if(window.self!==window.top)document.documentElement.classList.add('embed');</script>
 <div id="loadbar"></div>
 <canvas id="stars"></canvas>
 <canvas id="stage"></canvas>
@@ -682,6 +685,13 @@
   mTime.onclick=()=>setMode('time');
   mCluster.onclick=()=>setMode('cluster');
   applyMode();
+
+  // deep-link the view via URL hash (used by the home descent's layered iframes)
+  function modeFromHash(){ const h=(location.hash||'').replace('#','').toLowerCase();
+    if(h==='origins'||h==='cluster') setMode('cluster');
+    else if(h==='mosaic'||h==='sideb'||h==='side-b') setMode('mosaic');
+    else if(h==='matrix'||h==='ah'||h==='time') setMode('time'); }
+  addEventListener('hashchange', modeFromHash); modeFromHash();
 
   // ---- tier + favourites filter buttons ----
   const tA=document.getElementById('tA'), tFav=document.getElementById('tFav'),
