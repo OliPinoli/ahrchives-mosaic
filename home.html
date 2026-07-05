@@ -26,7 +26,7 @@
 
   /* ---- logo pinned to the TOP ---- */
   #top{ position:fixed; left:0; right:0; top:3.4vh; z-index:5; display:flex; justify-content:center; pointer-events:none; }
-  #logo{ width:min(14vh,30vw,160px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
+  #logo{ width:min(13.3vh,28.5vw,152px); opacity:0; transition:opacity 1s ease .3s; user-select:none; -webkit-user-drag:none; }
   #logo.in{ opacity:1; }
   #logoFallback{ font-weight:900; font-size:clamp(20px,4.4vw,34px); letter-spacing:-.02em; line-height:.86;
     text-align:center; text-transform:uppercase; -webkit-text-stroke:1px #111; color:#fff;
@@ -47,18 +47,32 @@
   .orb .chip img{ width:100%; height:100%; object-fit:cover; display:block; -webkit-user-drag:none; }
   .orb:hover .chip{ transform:rotate(-5deg) scale(1.04); box-shadow:0 16px 30px rgba(20,16,24,.26), 0 2px 0 #111; }
   /* the comic bubble — hidden until the cursor is on that head */
-  .orb .think{ position:absolute; left:50%; bottom:calc(100% + 16px); z-index:7; width:max-content; max-width:210px;
+  .orb .think{ position:absolute; z-index:7; width:max-content; max-width:200px;
     background:#fff; border:2px solid #111; border-radius:16px; padding:8px 13px; text-align:center;
     font-family:var(--mono); font-style:normal; font-weight:700; font-size:11px; line-height:1.32; letter-spacing:.02em;
     text-transform:uppercase; color:#111; box-shadow:3px 3px 0 rgba(0,0,0,.22);
-    opacity:0; transform:translateX(-50%) translateY(8px) scale(.96); transform-origin:bottom center; pointer-events:none;
-    transition:opacity .16s ease, transform .22s cubic-bezier(.2,.7,.2,1); }
+    opacity:0; pointer-events:none; transition:opacity .16s ease, transform .22s cubic-bezier(.2,.7,.2,1); }
   .orb .think em{ color:#a03828; font-style:normal; }
-  .orb .think::before{ content:""; position:absolute; left:calc(50% - 5px); bottom:-11px; width:10px; height:10px; border-radius:50%;
-    background:#fff; border:2px solid #111; }                       /* thought-trail dots pointing to the head */
-  .orb .think::after{ content:""; position:absolute; left:calc(50% + 7px); bottom:-19px; width:6px; height:6px; border-radius:50%;
-    background:#fff; border:1.5px solid #111; }
-  .orb:hover .think{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  /* comic dialogue tail (two triangles = fill + border) */
+  .orb .think::before, .orb .think::after{ content:""; position:absolute; border:9px solid transparent; }
+
+  /* LEFT head → bubble to the LEFT, tail points right */
+  #oArchives .think{ right:calc(100% + 15px); top:50%; transform-origin:right center; transform:translateY(-50%) scale(.94); }
+  #oArchives:hover .think{ opacity:1; transform:translateY(-50%) scale(1); }
+  #oArchives .think::before{ right:-18px; top:50%; margin-top:-9px; border-left-color:#111; }
+  #oArchives .think::after { right:-13px; top:50%; margin-top:-7px; border:7px solid transparent; border-left-color:#fff; }
+
+  /* MIDDLE head → bubble ABOVE, tail points down */
+  #oBook .think{ left:50%; bottom:calc(100% + 15px); transform-origin:bottom center; transform:translateX(-50%) translateY(6px) scale(.94); }
+  #oBook:hover .think{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  #oBook .think::before{ left:50%; bottom:-18px; margin-left:-9px; border-top-color:#111; }
+  #oBook .think::after { left:50%; bottom:-13px; margin-left:-7px; border:7px solid transparent; border-top-color:#fff; }
+
+  /* RIGHT head → bubble to the RIGHT, tail points left */
+  #oMusic .think{ left:calc(100% + 15px); top:50%; transform-origin:left center; transform:translateY(-50%) scale(.94); }
+  #oMusic:hover .think{ opacity:1; transform:translateY(-50%) scale(1); }
+  #oMusic .think::before{ left:-18px; top:50%; margin-top:-9px; border-right-color:#111; }
+  #oMusic .think::after { left:-13px; top:50%; margin-top:-7px; border:7px solid transparent; border-right-color:#fff; }
 
   /* ---- thought-trail bubbles rising from his head to the world-orbs ---- */
   .tdot{ position:fixed; z-index:4; border-radius:50%; background:#fff; border:1.5px solid #111;
@@ -358,7 +372,7 @@
     var Rtop=topH + H*0.03 + 12;
     var Rbot=GAP + 110 + H*0.08 + 14;                              // head row (bubbles are hover-only) + hint + AFR line
     var availH=H-Rtop-Rbot;
-    var hh=Math.min(availH, 820), hw=hh*heroAspect, maxW=W*0.92;
+    var hh=Math.min(availH, 902), hw=hh*heroAspect, maxW=W*0.95;    // hero cap +10%
     if(hw>maxW){ hw=maxW; hh=hw/heroAspect; }
     heroWrap.style.width=hw+'px'; heroWrap.style.height=hh+'px';
     heroWrap.style.top=(Rtop+availH/2)+'px';
