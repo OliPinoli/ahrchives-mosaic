@@ -201,12 +201,6 @@
       <div class="layer" data-src="index.html#origins"><iframe title="Origins"></iframe></div>
       <div class="layer" data-src="explorer.html"><iframe title="Explorer"></iframe></div>
     </div>
-    <div class="arc-cap">
-      <div class="ac" data-i="0"><b>AH! Matrix</b><span>999 heads · the archive awakes</span><a class="open" href="index.html#matrix" target="_blank" rel="noopener">open ↗</a></div>
-      <div class="ac" data-i="1"><b>Origins</b><span>the galaxy the hero fell through</span><a class="open" href="index.html#origins" target="_blank" rel="noopener">open ↗</a></div>
-      <div class="ac" data-i="2"><b>Explorer</b><span>filter every alter · read its page</span><a class="open" href="explorer.html" target="_blank" rel="noopener">open ↗</a></div>
-    </div>
-    <div class="arc-cue">scroll to descend ↓</div>
     <div class="arc-rail"></div>
   </section>
 
@@ -381,6 +375,7 @@
   orbs.forEach(function(o){
     o.el.addEventListener('click', function(e){ e.preventDefault();
       var r=o.el.getBoundingClientRect(); enter(o, r.left+r.width/2, r.top+r.height/2); });   // tap = descend
+    if(o.world==='Archives') o.el.addEventListener('pointerenter', function(){ if(!reduced) arcLoad(); });  // preload on hover → AH! shows instantly
   });
 
   // icons are fully anchored (positioned once in layout, re-placed on resize) — no cursor movement
@@ -391,16 +386,14 @@
   // archives = a layered descent: the built pages wait as iframes and cross-fade on scroll
   var arcWorld=document.getElementById('wArchives'), arcLoaded=false;
   var arcLayers=[].slice.call(document.querySelectorAll('#arcLayers .layer'));
-  var arcCaps=[].slice.call(document.querySelectorAll('.arc-cap .ac'));
-  var arcCue=document.querySelector('.arc-cue');
   function arcLoad(){ if(arcLoaded) return; arcLoaded=true;           // load the heavy iframes only once you descend
     arcLayers.forEach(function(L){ L.querySelector('iframe').src=L.getAttribute('data-src'); }); }
   function clamp01(v){ return v<0?0:v>1?1:v; }
   function arcScroll(){                                               // 0 = matrix, 1 = origins, 2 = explorer
     var vh=arcWorld.clientHeight||innerHeight, t=arcWorld.scrollTop/vh;
-    arcLayers.forEach(function(L,i){ L.style.opacity=clamp01(1-Math.abs(t-i)); });
-    arcCaps.forEach(function(c,i){ c.style.opacity=clamp01(1-Math.abs(t-i)*1.5); });
-    if(arcCue) arcCue.style.opacity = t<0.35 ? 1 : 0;
+    arcLayers.forEach(function(L,i){ var o=clamp01(1-Math.abs(t-i)); L.style.opacity=o;
+      // hide fully-faded layers so a transparent layer on top can't occlude & freeze (0 fps) the visible one
+      L.style.visibility = o<0.02 ? 'hidden' : 'visible'; });
   }
   arcWorld.addEventListener('scroll', arcScroll, {passive:true});
 
