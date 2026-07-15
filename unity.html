@@ -191,6 +191,11 @@
   #descend:focus-visible, #archive .portal:focus-visible, #archive .back:focus-visible, #social a:focus-visible{
     outline:2px solid var(--gold); outline-offset:3px; }
 
+  /* ---- bare background mode (embedded as the descent's "universe" layer): starfield only ---- */
+  body.bg #title, body.bg .cap, body.bg #descend, body.bg #social, body.bg #glitch,
+  body.bg #sun, body.bg #comet, body.bg #archive, body.bg #dive{ display:none !important; }
+  body.bg{ cursor:default; }
+
   /* respect reduced-motion: kill animation/transition, reveal everything at rest */
   @media (prefers-reduced-motion: reduce){
     *{ animation:none !important; }
@@ -259,6 +264,7 @@
 (function(){
   "use strict";
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var BG = location.search.indexOf('bg')>=0 || location.hash.indexOf('bg')>=0;   // bare starfield backdrop (descent "universe" layer)
   var cv=document.getElementById('stars'), ctx=cv.getContext('2d');
   var W,H,DPR=Math.min(devicePixelRatio||1,2);
   function resize(){ W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; cv.style.width=W+'px'; cv.style.height=H+'px'; }
@@ -286,14 +292,14 @@
     if(document.hidden) return;                              // pause rendering when the tab is hidden
     var w=cv.width, h=cv.height, F=falling();
     ctx.clearRect(0,0,w,h);
-    pan += F ? 0.0005 : 0.0011;                              // horizontal ambient drift (calmer once we tip into the fall)
-    var tv = F ? 0.0016 : 0;                                 // sustained gentle DOWNWARD fall while descended
+    pan += BG ? 0.00006 : (F ? 0.0005 : 0.0011);            // backdrop: almost no horizontal drift → motion reads as a vertical axis
+    var tv = BG ? 0.0011 : (F ? 0.0016 : 0);                // sustained gentle DOWNWARD fall (the landing zone keeps the descent's vertical flow)
     fallVel += (tv - fallVel)*0.03;
     impulse *= 0.93; if(impulse<0.0002) impulse=0;           // the initial "whoosh", decays into the sustained fall
     fall += fallVel + impulse;
     emerge += ((F?1:0) - emerge)*0.02;                       // distant heads + deep space fade in as you descend
     mx += (mtx-mx)*0.06; my += (mty-my)*0.06;                // ease the cursor parallax
-    var mox=mx*0.010, moy=my*0.010;
+    var mamp=BG?0.004:0.010, mox=mx*mamp, moy=my*mamp;      // backdrop: gentler cursor sway so the heads stay calm
 
     for(var li=0; li<stars.length; li++){ var layer=stars[li], ox=(pan+mox)*layer.d, oy=(fall+moy)*layer.d;
       for(var i=0;i<layer.s.length;i++){ var st=layer.s[i];
@@ -389,7 +395,12 @@
     if(e.key==='Enter' && !falling() && tag!=='A' && tag!=='BUTTON'){ descend(); }   // Enter anywhere descends (the button handles its own Enter)
   });
 
-  if(reduced){
+  if(BG){                                          // bare backdrop: deep-space starfield + drifting heads, no UI
+    document.body.classList.add('bg','descending');
+    emerge=1;                                      // heads already materialised (calm, no whoosh)
+    requestAnimationFrame(draw);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) requestAnimationFrame(draw); });
+  } else if(reduced){
     revealSurface(); draw(0); document.getElementById('comet').style.opacity=1;   // one static frame, no loop
   } else {
     requestAnimationFrame(draw);

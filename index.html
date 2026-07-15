@@ -673,13 +673,15 @@
     if(P.mode===m) return; P.mode=m;
     if(m==='cluster'){ if(P.shape==='square') setShape('round'); }
     else { if(P.shape!=='square') setShape('square'); }
-    if(m==='mosaic') buildGrid();
-    else if(m==='time') timeDirty=true;
-    else if(m==='cluster'){ camAngle=0; camX=camY=camTX=camTY=0; ovBlend=0; ovA=0; buildClusters();
-      ovTarget=(P.tiers.size>0||P.favOnly)?1:0; syncGalaxyBtn(); }   // enter filtered → overview; enter unfiltered → cockpit fly
     if(m!=='mosaic' && P.paused){ P.paused=false; bPause.classList.remove('on'); bPause.textContent='⏸'; }   // animated modes auto-play
     applyMode();
     updateBG();   // toggle the transparent-clear + starfield when entering/leaving origins
+    try{                                          // geometry may build before images/atlas are ready
+      if(m==='mosaic') buildGrid();
+      else if(m==='time') timeDirty=true;
+      else if(m==='cluster'){ camAngle=0; camX=camY=camTX=camTY=0; ovBlend=0; ovA=0; buildClusters();
+        ovTarget=(P.tiers.size>0||P.favOnly)?1:0; syncGalaxyBtn(); }   // filtered → overview; unfiltered → cockpit fly
+    }catch(e){}   // finish() rebuilds for the active mode once ready
   }
   mMos.onclick=()=>setMode('mosaic');
   mTime.onclick=()=>setMode('time');
@@ -691,7 +693,7 @@
     if(h==='origins'||h==='cluster') setMode('cluster');
     else if(h==='mosaic'||h==='sideb'||h==='side-b') setMode('mosaic');
     else if(h==='matrix'||h==='ah'||h==='time') setMode('time'); }
-  addEventListener('hashchange', modeFromHash); modeFromHash();
+  addEventListener('hashchange', modeFromHash);   // initial route applied after init completes (see end of script)
 
   // ---- tier + favourites filter buttons ----
   const tA=document.getElementById('tA'), tFav=document.getElementById('tFav'),
@@ -911,6 +913,7 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+  modeFromHash();   // now safe: theme is defined + the render loop is live (fixes hash-routed #origins/#mosaic on load)
 })();
 </script>
 </body>

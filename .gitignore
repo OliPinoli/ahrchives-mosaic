@@ -19,3 +19,10 @@ download_opensea.mjs
 *.bak
 .claude/
 .netlify/
+
+# local iteration checkpoints (session backups, not source)
+home.checkpoint-*.html
+
+# reference screenshots with spaces in names (break netlify deploy; local-only)
+assets/Screenshot*.png
+assets/* *.png
