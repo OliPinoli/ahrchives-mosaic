@@ -173,10 +173,15 @@
   /* GIANT = open to the RIGHT edge: FULL colour from 25% → 100%, one clean fade on the leftmost quarter */
   #backMoon{ -webkit-mask-image:linear-gradient(to right, transparent 0, #000 25%, #000 100%);
                      mask-image:linear-gradient(to right, transparent 0, #000 25%, #000 100%); }
+  /* littleMF = the mirror of the GIANT: open to the LEFT edge, full colour to 75%, one clean fade on the right quarter */
+  #backMF{ -webkit-mask-image:linear-gradient(to right, #000 0, #000 75%, transparent 100%);
+                   mask-image:linear-gradient(to right, #000 0, #000 75%, transparent 100%); }
   #backMoon .bd,#backMoon .bdref{ background-image:url(assets/back-moon.jpeg); }
   #backSun .bd,#backSun .bdref{ background-image:url(assets/back-sun.jpeg); }
+  #backMF .bd,#backMF .bdref{ background-image:url(assets/back-mf.jpeg); }
   body.clouds-in #backMoon{ opacity:.92; }
   body.moon-in #backSun{ opacity:.92; }
+  body.car-in #backMF{ opacity:.92; }
   @keyframes backdrift{ 0%,100%{ background-position:50% 62%; } 50%{ background-position:50% 46%; } }
   @media (prefers-reduced-motion:reduce){ .backdrop .bd{ animation:none; } }
 
@@ -343,6 +348,7 @@
   <!-- hover backdrops: each character's world in a soft masked channel behind them -->
   <div id="backSun" class="backdrop" aria-hidden="true"><div class="bd"></div><div class="bdref"></div></div>
   <div id="backMoon" class="backdrop" aria-hidden="true"><div class="bd"></div><div class="bdref"></div></div>
+  <div id="backMF" class="backdrop" aria-hidden="true"><div class="bd"></div><div class="bdref"></div></div>
 
   <!-- atmosphere: clouds settle at the GIANT's feet · the moon descends when WalkBoy is picked -->
   <div id="clouds" aria-hidden="true">
@@ -354,8 +360,8 @@
     </div>
   </div>
   <div id="car" aria-hidden="true">
-    <img class="body" src="assets/car_crop.png" alt="">
-    <div class="carref" aria-hidden="true"><img class="body" src="assets/car_crop.png" alt=""></div>
+    <img class="body" src="assets/van_crop2.png" alt="">
+    <div class="carref" aria-hidden="true"><img class="body" src="assets/van_crop2.png" alt=""></div>
   </div>
   <div id="giantLights" aria-hidden="true"><div class="glo chest"></div><div class="glo head"></div></div>
   <div id="slime" aria-hidden="true"><div class="slimesprite"></div><div class="slimeref" aria-hidden="true"><div class="slimesprite"></div></div></div>
@@ -622,7 +628,7 @@
     if(car){ var carW=Math.min(400, Math.round(sp*2.5)); var lmx=cx-sp;   // ×2 the van · littleMF centre (posIndex music=0 → cx−sp)
       car.style.left=Math.round(lmx-carW/2)+'px'; car.style.top=soilY+'px'; car.style.width=carW+'px';
       car.style.setProperty('--car-start', (-(lmx + carW/2 + 40))+'px');    // starts fully off-screen LEFT, drives right to rest
-      var carH=Math.round(carW*84/235);                                     // van display height (crop is 235×84)
+      var carH=Math.round(carW*91/256);                                     // van display height (crop is 256×91)
       document.getElementById('oMusic').style.setProperty('--mf-bub', (carH+22)+'px'); }   // lift littleMF's bubble just above the van roof
     // the two spot-lights sit at the GIANT (right icon, cx+sp), behind him; the slime sits just RIGHT of the WalkBoy
     var gl=document.getElementById('giantLights');
@@ -642,7 +648,9 @@
         if(r){ r.style.top=soilY+'px'; r.style.height=refH+'px'; } }
       setBD(bs, Math.round(cx-bw/2), bw);
       var mLeft=Math.round(cx+sp-bw/2);
-      setBD(bm, mLeft, Math.max(bw, innerWidth-mLeft)); }
+      setBD(bm, mLeft, Math.max(bw, innerWidth-mLeft));
+      var bmf=document.getElementById('backMF');                        // littleMF: from the LEFT screen edge past him
+      if(bmf) setBD(bmf, 0, Math.max(bw, Math.round((cx-sp)+bw/2))); }
     // the moon HIDES behind the logo (only her eyes peek below it — first half), then DROPS to the
     // midpoint between the logo and the WalkBoy (second half). The clip window's TOP tucks 6px behind
     // the logo baseline (keeps her body hidden while peeking); the window runs tall enough that she's
