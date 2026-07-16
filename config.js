@@ -57,8 +57,8 @@ window.AH_PARAMS = {
   /* ───────────── MOON BOUNCE  (drops from the sky when WalkBoy is hovered / tapped) ───────────── */
   moon: {
     gravity:     225,   // speed of the DESCENT from the sky — higher = drops faster                (beach-ball drift; was 700)
-    floatSpeed:  0.75,  // levitation bob speed once it settles — lower = slower & dreamier          (0.75 ≈ ~4s float)
-    floatHeight: 3,     // how far it drifts up & down while floating, in px — small = subtle        (default 6)
+    floatSpeed:  0.85,  // levitation bob speed once it settles — lower = slower & dreamier          (0.85 ≈ ~3.7s float)
+    floatHeight: 4.5,   // how far it drifts up & down while floating, in px — small = subtle        (default 6)
   },
 
 };
