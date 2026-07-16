@@ -27,7 +27,7 @@
   #preview{flex:1.35}
   .stage{flex:1;display:flex;align-items:center;justify-content:center;
     background:#fff;overflow:hidden;position:relative}
-  #previewCanvas{image-rendering:pixelated}
+  #previewCanvas{image-rendering:pixelated;position:absolute}   /* positioned at INTEGER coords by drawPreview — no half-pixel blur */
   .previewbar{display:flex;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--line);color:var(--dim);font-size:11px}
   .previewbar input[type=range]{flex:1}
   /* PROJECT / files */
@@ -549,11 +549,18 @@
     var tr=(f.trim&&f.trim.w>0&&f.trim.h>0)?f.trim:{x:0,y:0,w:fr.sw,h:fr.sh};   // crop the empty padding → sprite fills the view
     cv.width=tr.w*sc; cv.height=tr.h*sc; x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
     x.drawImage(f.img,fr.sx+tr.x,fr.sy+tr.y,tr.w,tr.h,0,0,cv.width,cv.height);
-    var stage=cv.parentElement;   // white stage + a pixel grid across it, aligned to the sprite's cells
+    var stage=cv.parentElement;
+    // place the canvas at INTEGER pixel coords (flex centering can land on half-pixels → grid misalignment)
+    var stW=stage.clientWidth, stH=stage.clientHeight;
+    var left=Math.max(0,Math.round((stW-cv.width)/2));
+    var top=(S.anchor==='bottom') ? Math.max(0,stH-cv.height-2*sc)          // bottom: exactly 2 sprite-pixels of gap
+                                  : Math.max(0,Math.round((stH-cv.height)/2));
+    cv.style.left=left+'px'; cv.style.top=top+'px';
+    // pixel grid across the white stage: cell = 1 sprite pixel (sc), origin locked to the canvas corner
     if(S.grid && sc>=3){
       stage.style.backgroundImage='linear-gradient(to right, rgba(0,0,0,.10) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.10) 1px, transparent 1px)';
       stage.style.backgroundSize=sc+'px '+sc+'px';
-      stage.style.backgroundPosition=cv.offsetLeft+'px '+cv.offsetTop+'px';
+      stage.style.backgroundPosition=left+'px '+top+'px';
     } else stage.style.backgroundImage='none';
     $('#pvframe').textContent='frame '+(S.playhead+1)+'/'+S.timeline.length+' (n°'+(t.frame+1)+')';
     $('#pvinfo').textContent=tr.w+'×'+tr.h+' of '+fr.sw+'×'+fr.sh+' ×'+sc;
@@ -728,9 +735,6 @@
   $('#gridBtn').onclick=function(){ S.grid=!S.grid; $('#gridBtn').style.color=S.grid?'var(--accent)':'var(--dim)'; drawPreview(); };
   $('#anchorBtn').onclick=function(){
     S.anchor=(S.anchor==='bottom')?'middle':'bottom';
-    var st=document.querySelector('.stage');
-    st.style.alignItems=(S.anchor==='bottom')?'flex-end':'center';
-    st.style.paddingBottom=(S.anchor==='bottom')?'2%':'0';
     $('#anchorBtn').textContent=(S.anchor==='bottom')?'⬓ bottom':'◎ middle';
     $('#anchorBtn').style.color=(S.anchor==='bottom')?'var(--accent)':'var(--dim)';
     drawPreview();
