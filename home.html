@@ -626,7 +626,7 @@
     // the van drops BEHIND littleMF (the LEFT icon), on the soil line
     var car=document.getElementById('car');
     if(car){ var carW=Math.min(400, Math.round(sp*2.5)); var lmx=cx-sp;   // ×2 the van · littleMF centre (posIndex music=0 → cx−sp)
-      car.style.left=Math.round(lmx-carW/2)+'px'; car.style.top=soilY+'px'; car.style.width=carW+'px';
+      car.style.left=Math.round(lmx-carW/2)+'px'; car.style.top=(soilY+2)+'px'; car.style.width=carW+'px';   // +2px: sink the van into the soil (Oli)
       car.style.setProperty('--car-start', (-(lmx + carW/2 + 40))+'px');    // starts fully off-screen LEFT, drives right to rest
       var carH=Math.round(carW*91/256);                                     // van display height (crop is 256×91)
       document.getElementById('oMusic').style.setProperty('--mf-bub', (carH+22)+'px'); }   // lift littleMF's bubble just above the van roof
