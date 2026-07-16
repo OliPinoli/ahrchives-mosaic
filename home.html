@@ -167,12 +167,12 @@
   .backdrop .bdref{ transform:scaleY(-1); background-position:50% 100%; opacity:.22; filter:brightness(.92);
     -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 60%);
             mask-image:linear-gradient(to bottom, transparent 0, #000 60%); }
-  /* WalkBoy = a CORRIDOR: full top-to-bottom, fading only on the two sides */
-  #backSun{ -webkit-mask-image:linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%);
-                    mask-image:linear-gradient(to right, transparent 0, #000 22%, #000 78%, transparent 100%); }
-  /* GIANT = open to the RIGHT edge of the screen, fading only on the left */
-  #backMoon{ -webkit-mask-image:linear-gradient(to right, transparent 0, #000 30%, #000 100%);
-                     mask-image:linear-gradient(to right, transparent 0, #000 30%, #000 100%); }
+  /* WalkBoy = a CORRIDOR: full colour through the centre, just a LITTLE fade on each side */
+  #backSun{ -webkit-mask-image:linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%);
+                    mask-image:linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%); }
+  /* GIANT = open to the RIGHT edge: FULL colour from 25% → 100%, one clean fade on the leftmost quarter */
+  #backMoon{ -webkit-mask-image:linear-gradient(to right, transparent 0, #000 25%, #000 100%);
+                     mask-image:linear-gradient(to right, transparent 0, #000 25%, #000 100%); }
   #backMoon .bd,#backMoon .bdref{ background-image:url(assets/back-moon.jpeg); }
   #backSun .bd,#backSun .bdref{ background-image:url(assets/back-sun.jpeg); }
   body.clouds-in #backMoon{ opacity:.92; }
