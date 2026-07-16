@@ -141,7 +141,7 @@
   </section>
 
   <section class="panel" id="project">
-    <div class="ptitle">PROJECT · FOLDER LIST</div>
+    <div class="ptitle">PROJECT · FOLDER LIST <span id="saveLib" title="save the PNG library in this browser" style="cursor:pointer;color:var(--accent)">💾 save</span></div>
     <div class="pbody">
       <div style="display:flex;gap:6px">
         <div class="addbtn" id="addFolder" style="flex:1">+ FOLDER</div>
@@ -267,12 +267,17 @@
     // offscreen to detect blank (fully transparent) cells
     var oc=document.createElement('canvas'); oc.width=f.img.width; oc.height=f.img.height;
     var ox=oc.getContext('2d'); ox.drawImage(f.img,0,0);
+    var tminx=fw,tminy=fh,tmaxx=-1,tmaxy=-1;   // union bbox of visible pixels across ALL frames → preview trim
     for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
       var sx=c*fw, sy=r*fh, empty=true;
       try{ var d=ox.getImageData(sx,sy,fw,fh).data;
-        for(var i=3;i<d.length;i+=4){ if(d[i]>8){empty=false;break;} } }catch(e){ empty=false; }
+        for(var yy=0;yy<fh;yy++) for(var xx=0;xx<fw;xx++){
+          if(d[(yy*fw+xx)*4+3]>8){ empty=false;
+            if(xx<tminx)tminx=xx; if(xx>tmaxx)tmaxx=xx; if(yy<tminy)tminy=yy; if(yy>tmaxy)tmaxy=yy; } }
+      }catch(e){ empty=false; }
       f.frames.push({sx:sx,sy:sy,sw:fw,sh:fh,col:c,row:r,empty:empty,use:!empty});
     }
+    f.trim=(tmaxx>=0)? {x:tminx,y:tminy,w:tmaxx-tminx+1,h:tmaxy-tminy+1} : {x:0,y:0,w:fw,h:fh};
     return f.frames;
   }
 
@@ -344,7 +349,16 @@
     var nm=document.createElement('div'); nm.className='fname'; nm.textContent=f.name;
     var sl=document.createElement('button'); sl.className='sliceBtn'; sl.textContent=f.frames.length?'Re-slice':'Slice ▸';
     sl.onclick=function(){ openEditor(f); };
-    head.appendChild(caret); head.appendChild(nm); head.appendChild(sl); body.appendChild(head);
+    head.appendChild(caret); head.appendChild(nm);
+    if(f.frames.length){
+      var anyOff=f.frames.some(function(q){return !q.empty && !q.use});
+      var selAll=document.createElement('button'); selAll.className='btn';
+      selAll.style.cssText='padding:4px 8px;font-size:11px;flex:none';
+      selAll.textContent=anyOff?'☑ select all':'☐ none';
+      selAll.onclick=function(){ f.frames.forEach(function(q){ q.use=anyOff?!q.empty:false; }); renderBrowser(); };
+      head.appendChild(selAll);
+    }
+    head.appendChild(sl); body.appendChild(head);
 
     var info=document.createElement('div'); info.className='muted'; info.style.marginBottom='8px';
     info.innerHTML = f.frames.length
@@ -363,7 +377,11 @@
       var fi=document.createElement('div'); fi.className='fi'; fi.textContent=idx+1;
       cell.appendChild(chk); cell.appendChild(cv); cell.appendChild(fi);
       cell.onclick=function(){ addToTimeline(f.id,idx); };
-      cell.ondragstart=function(e){ e.dataTransfer.setData('text/frame',JSON.stringify({fileId:f.id,idx:idx})); };
+      cell.ondragstart=function(e){
+        var checked=f.frames.map(function(q,i){return q.use?i:-1}).filter(function(i){return i>=0});
+        if(fr.use && checked.length>1) e.dataTransfer.setData('text/frames', JSON.stringify({fileId:f.id, idxs:checked}));
+        else e.dataTransfer.setData('text/frame', JSON.stringify({fileId:f.id,idx:idx}));
+      };
       grid.appendChild(cell);
     });
     body.appendChild(grid);
@@ -449,9 +467,10 @@
   track.addEventListener('dragleave',function(){ track.classList.remove('drag'); });
   track.addEventListener('drop',function(e){
     e.preventDefault(); track.classList.remove('drag');
-    var fd=e.dataTransfer.getData('text/frame'), rd=e.dataTransfer.getData('text/reorder');
+    var fd=e.dataTransfer.getData('text/frame'), fsd=e.dataTransfer.getData('text/frames'), rd=e.dataTransfer.getData('text/reorder');
     var at=dropIndex(e.clientX);
-    if(fd){ var o=JSON.parse(fd); S.timeline.splice(at,0,{fileId:o.fileId,frame:o.idx}); }
+    if(fsd){ var m=JSON.parse(fsd); m.idxs.forEach(function(ix,k){ S.timeline.splice(at+k,0,{fileId:m.fileId,frame:ix}); }); }
+    else if(fd){ var o=JSON.parse(fd); S.timeline.splice(at,0,{fileId:o.fileId,frame:o.idx}); }
     else if(rd!==''){ var from=+rd; var item=S.timeline[from]; S.timeline.splice(from,1);
       if(at>from)at--; S.timeline.splice(at,0,item); }
     renderTimeline();
@@ -476,8 +495,9 @@
       var REF=64;   // shared reference cell: EVERY sprite gets the same ×N, so 16×16 vs 32×32 vs 32×64 keep their true relative sizes
       sc=Math.max(1,Math.floor(target/REF)); }
     else sc=Math.max(1,+S.zoom||1);
-    cv.width=fr.sw*sc; cv.height=fr.sh*sc; x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
-    x.drawImage(f.img,fr.sx,fr.sy,fr.sw,fr.sh,0,0,cv.width,cv.height);
+    var tr=(f.trim&&f.trim.w>0&&f.trim.h>0)?f.trim:{x:0,y:0,w:fr.sw,h:fr.sh};   // crop the empty padding → sprite fills the view
+    cv.width=tr.w*sc; cv.height=tr.h*sc; x=cv.getContext('2d'); x.imageSmoothingEnabled=false;
+    x.drawImage(f.img,fr.sx+tr.x,fr.sy+tr.y,tr.w,tr.h,0,0,cv.width,cv.height);
     var stage=cv.parentElement;   // white stage + a pixel grid across it, aligned to the sprite's cells
     if(S.grid && sc>=3){
       stage.style.backgroundImage='linear-gradient(to right, rgba(0,0,0,.10) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.10) 1px, transparent 1px)';
@@ -485,7 +505,7 @@
       stage.style.backgroundPosition=cv.offsetLeft+'px '+cv.offsetTop+'px';
     } else stage.style.backgroundImage='none';
     $('#pvframe').textContent='frame '+(S.playhead+1)+'/'+S.timeline.length+' (n°'+(t.frame+1)+')';
-    $('#pvinfo').textContent=fr.sw+'×'+fr.sh+' ×'+sc;
+    $('#pvinfo').textContent=tr.w+'×'+tr.h+' of '+fr.sw+'×'+fr.sh+' ×'+sc;
   }
   var acc=0,lastT=0;
   function loop(ts){
@@ -610,6 +630,32 @@
     setTimeout(function(){ $('#exCopy').textContent='⧉ Copy'; $('#exCopy').classList.remove('copied'); },1400); };
   $('#exClose').onclick=function(){ $('#exOverlay').classList.remove('on'); };
 
+  /* ---------- save / restore the PNG library (browser localStorage) ---------- */
+  function saveLibrary(){
+    var lib={ folders:S.folders.map(function(fo){ return {id:fo.id,name:fo.name,open:fo.open}; }),
+      files:S.files.map(function(f){ return {name:f.name,url:f.url,folderId:f.folderId||null,
+        frameW:f.frameW,frameH:f.frameH,sliced:f.frames.length>0}; }) };
+    var el=$('#saveLib');
+    try{ localStorage.setItem('ahSpriteLib', JSON.stringify(lib));
+      el.textContent='✓ saved'; setTimeout(function(){ el.textContent='💾 save'; },1400); }
+    catch(e){ alert('Save failed — the library is too big for browser storage.\n'+e.message); }
+  }
+  function restoreLibrary(){
+    var raw=localStorage.getItem('ahSpriteLib'); if(!raw) return;
+    var lib; try{ lib=JSON.parse(raw); }catch(e){ return; }
+    (lib.folders||[]).forEach(function(fo){ S.folders.push(fo); if(fo.id>uid) uid=fo.id; });
+    var chain=Promise.resolve();
+    (lib.files||[]).forEach(function(sf){
+      chain=chain.then(function(){ return loadImage(sf.url, sf.name).then(function(id){
+        var f=fileById(id); f.folderId=sf.folderId||null; f.frameW=sf.frameW; f.frameH=sf.frameH;
+        if(sf.sliced) sliceFile(f,sf.frameW,sf.frameH);
+      }); });
+    });
+    chain.then(function(){ S.curFolder=null; renderFiles(); renderBrowser(); });
+  }
+  $('#saveLib').onclick=saveLibrary;
+  restoreLibrary();
+
   /* ---------- wire controls ---------- */
   $('#addbtn').onclick=function(){ $('#fileInput').click(); };
   $('#fileInput').onchange=function(e){ readFiles(e.target.files); e.target.value=''; };
@@ -643,6 +689,6 @@
   window.STUDIO={ S:S, loadImage:loadImage, slice:function(id,w,h){return sliceFile(fileById(id),w,h)},
     addToTimeline:addToTimeline, setFps:function(n){S.fps=n;$('#fps').value=n;}, setName:function(n){S.name=n;$('#animName').value=n;},
     buildExport:buildExport, fileById:fileById, renderFiles:renderFiles, moveFile:moveFile,
-    timelineCanvases:timelineCanvases, apngBytes:apngBytes, drawPreview:drawPreview };
+    saveLibrary:saveLibrary, timelineCanvases:timelineCanvases, apngBytes:apngBytes, drawPreview:drawPreview };
 })();
 </script>
